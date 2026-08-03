@@ -1,0 +1,7 @@
+# Cloudflare Pages - ignore list
+.tools/
+server.py
+.DS_Store
+*.bak
+.git/
+.dist/

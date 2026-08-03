@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>KIRI Maker Custom Effects & Camera Tool</title>
+  <meta name="description" content="Three.js particle visualization with MediaPipe hand gesture control. Load PLY models from Kiri Engine, Polycam, and Luma share links.">
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/style.css?v=3.37">
+  <!-- Three.js Import Map -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
+      "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/2.1.0/spark.module.js",
+      "fflate": "https://cdn.jsdelivr.net/npm/fflate@0.8.2/+esm",
+      "fix-webm-duration": "https://cdn.jsdelivr.net/npm/@fix-webm-duration/fix/+esm",
+      "mediabunny": "https://cdn.jsdelivr.net/npm/mediabunny@1.50.8/+esm"
+    }
+  }
+  </script>
+  <!-- GSAP CDN for cinematic flight timelines -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body class="landing-mode">
+  <svg class="tabler-sprite" aria-hidden="true">
+    <symbol id="ti-arrow-right" viewBox="0 0 24 24"><path d="M5 12l14 0"/><path d="M13 18l6 -6"/><path d="M13 6l6 6"/></symbol>
+    <symbol id="ti-upload" viewBox="0 0 24 24"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 9l5 -5l5 5"/><path d="M12 4l0 12"/></symbol>
+    <symbol id="ti-sparkles" viewBox="0 0 24 24"><path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6"/></symbol>
+    <symbol id="ti-atom" viewBox="0 0 24 24"><path d="M12 12v.01"/><path d="M19.071 4.929c-1.562 -1.562 -6 .337 -9.9 4.243c-3.905 3.905 -5.804 8.337 -4.242 9.9c1.562 1.561 6 -.338 9.9 -4.244c3.905 -3.905 5.804 -8.337 4.242 -9.9"/><path d="M4.929 4.929c-1.562 1.562 .337 6 4.243 9.9c3.905 3.905 8.337 5.804 9.9 4.242c1.561 -1.562 -.338 -6 -4.244 -9.9c-3.905 -3.905 -8.337 -5.804 -9.9 -4.242"/></symbol>
+    <symbol id="ti-video" viewBox="0 0 24 24"><path d="M15 10l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -1.447 .894l-4.553 -2.276v-4"/><path d="M3 8a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2l0 -8"/></symbol>
+    <symbol id="ti-settings" viewBox="0 0 24 24"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/></symbol>
+    <symbol id="ti-hand-stop" viewBox="0 0 24 24"><path d="M8 13v-7.5a1.5 1.5 0 0 1 3 0v6.5"/><path d="M11 5.5v-2a1.5 1.5 0 1 1 3 0v8.5"/><path d="M14 5.5a1.5 1.5 0 0 1 3 0v6.5"/><path d="M17 7.5a1.5 1.5 0 0 1 3 0v8.5a6 6 0 0 1 -6 6h-2h.208a6 6 0 0 1 -5.012 -2.7a69.74 69.74 0 0 1 -.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/></symbol>
+    <symbol id="ti-hand-grab" viewBox="0 0 24 24"><path d="M8 11v-3.5a1.5 1.5 0 0 1 3 0v2.5"/><path d="M11 9.5v-3a1.5 1.5 0 0 1 3 0v3.5"/><path d="M14 7.5a1.5 1.5 0 0 1 3 0v2.5"/><path d="M17 9.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-2h.208a6 6 0 0 1 -5.012 -2.7l-.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/></symbol>
+    <symbol id="ti-hand-two-fingers" viewBox="0 0 24 24"><path d="M8 13v-8.5a1.5 1.5 0 0 1 3 0v7.5"/><path d="M17 11.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-2h.208a6 6 0 0 1 -5.012 -2.7a69.74 69.74 0 0 1 -.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/><path d="M14 10.5a1.5 1.5 0 0 1 3 0v1.5"/><path d="M11 5.5v-2a1.5 1.5 0 1 1 3 0v8.5"/></symbol>
+    <symbol id="ti-hand-finger" viewBox="0 0 24 24"><path d="M8 13v-8.5a1.5 1.5 0 0 1 3 0v7.5"/><path d="M11 11.5v-2a1.5 1.5 0 1 1 3 0v2.5"/><path d="M14 10.5a1.5 1.5 0 0 1 3 0v1.5"/><path d="M17 11.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-2h.208a6 6 0 0 1 -5.012 -2.7a69.74 69.74 0 0 1 -.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/></symbol>
+    <symbol id="ti-book-2" viewBox="0 0 24 24"><path d="M19 4v16h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12"/><path d="M19 16h-12a2 2 0 0 0 -2 2"/><path d="M9 8h6"/></symbol>
+    <symbol id="ti-circle-check" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M9 12l2 2l4 -4"/></symbol>
+    <symbol id="ti-loader-2" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9"/></symbol>
+    <symbol id="ti-player-play" viewBox="0 0 24 24"><path d="M7 4v16l13 -8l-13 -8"/></symbol>
+    <symbol id="ti-dice-5" viewBox="0 0 24 24"><path d="M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14"/><path d="M7 7l.01 0"/><path d="M17 7l.01 0"/><path d="M7 17l.01 0"/><path d="M17 17l.01 0"/><path d="M12 12l.01 0"/></symbol>
+    <symbol id="ti-view-360-arrow" viewBox="0 0 24 24"><path d="M17 15.328c2.414 -.718 4 -1.94 4 -3.328c0 -2.21 -4.03 -4 -9 -4s-9 1.79 -9 4s4.03 4 9 4"/><path d="M9 13l3 3l-3 3"/></symbol>
+    <symbol id="ti-slash" viewBox="0 0 24 24"><path d="M5 5l14 14"/></symbol>
+    <symbol id="ti-brand-github" viewBox="0 0 24 24"><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3"/><path d="M15 21v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.7 -1.4 5.7 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.8 5.7 5.7 6c-.6 .6 -.6 1.2 -.5 2v3.5"/></symbol>
+    <symbol id="ti-x" viewBox="0 0 24 24"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></symbol>
+  </svg>
+  <a class="github-corner-badge" href="https://github.com/willjim/KIRI-Maker" target="_blank" rel="noopener noreferrer" title="View KIRI Maker on GitHub" aria-label="View KIRI Maker on GitHub">
+    <svg class="tabler-icon" aria-hidden="true"><use href="#ti-brand-github"></use></svg>
+  </a>
+  <div class="app-container no-select">
+    <!-- Three.js Canvas -->
+    <div id="canvas-container"></div>
+    <!-- ========== Toolbar ========== -->
+    <div class="toolbar" id="toolbar">
+      <!-- URL Input -->
+      <div class="url-input-wrapper" id="toolbar-url-wrapper">
+        <input
+          type="text"
+          id="url-input"
+          class="url-input"
+          placeholder="Paste a Kiri Engine, Polycam, or Luma share URL..."
+          autocomplete="off"
+          spellcheck="false"
+        >
+      </div>
+      <!-- Load Button -->
+      <button id="btn-load" class="btn btn-primary" title="Load model from URL">
+        <svg class="tabler-icon" aria-hidden="true"><use href="#ti-arrow-right"></use></svg>
+        <span class="btn-text">Load</span>
+      </button>
+      <div class="toolbar-divider" id="toolbar-url-divider"></div>
+      
+      <!-- Upload Button (Hidden) -->
+      <button id="btn-upload" class="btn btn-secondary" title="Upload local PLY or Splat file" style="display: none;">
+        <svg class="tabler-icon" aria-hidden="true"><use href="#ti-upload"></use></svg>
+        <span class="btn-text">Upload Model</span>
+      </button>
+      <!-- Hidden File Input -->
+      <input type="file" id="file-input" class="file-input-hidden" accept=".ply,.splat">
+      <!-- 1. 点云模式 / Spark Mode Toggle -->
+      <button id="btn-toggle-spark" class="btn btn-secondary" title="Toggle 3D Reality mode">
+        <span class="btn-icon-symbol"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-atom"></use></svg></span><span class="btn-text">3D Reality</span>
+      </button>
+      <div class="toolbar-divider"></div>
+
+      <!-- 2. 镜头运镜 / Camera Path Mode Toggle -->
+      <button id="btn-camera-mode" class="btn btn-secondary" title="Open camera path export mode">
+        <span class="btn-icon-symbol"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-video"></use></svg></span><span class="btn-text">Camera Path</span>
+      </button>
+      <div class="toolbar-divider"></div>
+
+      <!-- 3. 渲染设置 / Settings Toggle -->
+      <button id="btn-settings" class="btn btn-secondary" title="Open rendering & filtering settings">
+        <span class="btn-icon-symbol"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-settings"></use></svg></span><span class="btn-text">Settings</span>
+      </button>
+      <div class="toolbar-divider"></div>
+
+      <!-- 4. 手势控制 / Gesture Toggle -->
+      <button id="btn-gesture" class="btn btn-secondary" title="Toggle hand gesture control">
+        <span class="btn-icon-symbol"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-hand-stop"></use></svg></span><span class="btn-text">Gesture</span>
+      </button>
+      <div class="toolbar-divider"></div>
+
+      <!-- 5. 使用指南 / Guide Link -->
+      <a id="btn-guide" href="guide.html" target="_blank" class="btn btn-secondary" title="Open user guide" style="text-decoration: none;">
+        <span class="btn-icon-symbol"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-book-2"></use></svg></span><span class="btn-text">Guide</span>
+      </a>
+    </div>
+    <!-- Language Switcher (Top Right Corner) -->
+    <button id="btn-lang" class="lang-toggle-btn" title="Switch Language / 切换语言" hidden>
+      <span class="lang-zh active-lang">中</span><span class="lang-sep">/</span><span class="lang-en">EN</span>
+    </button>
+    <button id="btn-home" class="home-btn" type="button">Home</button>
+    <!-- ========== Camera Path Panel ========== -->
+    <div class="camera-path-panel hidden" id="camera-path-panel">
+      <div class="camera-panel-header">
+        <h3>Camera Path Export</h3>
+        <span class="camera-start-hint">滑动可调整运镜的初始位置</span>
+        <button id="btn-header-preview" class="camera-header-preview" type="button" disabled>Preview</button>
+      </div>
+      <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: 10px;">
+        Please adjust your view; the initial position will serve as the first frame of the built-in flight preset. Click export video; during export, you can toggle point cloud mode and play particle effects, which will be fully recorded.
+      </p>
+      
+      <!-- Preset Flights Dropdown Selection -->
+      <div id="mobile-camera-options" class="mobile-camera-options"></div>
+      <div id="desktop-flight-anchor"></div>
+      <div id="flight-preset-item" class="setting-item camera-option-item" style="margin-bottom: 12px; display: flex; flex-direction: column;">
+        <label for="select-preset-flight" style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-bottom: 4px;">Flight Path Preset</label>
+        <select id="select-preset-flight" style="width: 100%; padding: 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.08); color: var(--text-primary); border: 1px solid var(--border); font-size: 12px; outline: none; cursor: pointer;">
+          <option value="none">-- Custom Keyframes - Please Select --</option>
+          <option value="orbit360">1. Orbit 360 (Horizontal)</option>
+          <option value="verticalLoop">2. Vertical Pitch Loop</option>
+          <option value="figure8">3. Figure-8 Infinity Loop</option>
+          <option value="spiralHelix">4. Spiral Helix Zoom</option>
+          <option value="sinusoidWave">5. Sinusoid Altitude Wave</option>
+          <option value="panZoomScan">6. Detail Pan & Zoom Scan</option>
+          <option value="dollyZoom">7. Cinematic Dolly Zoom</option>
+          <option value="butterfly">8. Spherical Butterfly Sweep</option>
+          <option value="pendulum">9. Pendulum Swing Arc</option>
+          <option value="heroSweep">10. Low-Angle Hero Sweep</option>
+          <option value="macroRing">11. Close-up Macro Orbit</option>
+          <option value="zenithSpiral">12. Zenith Polar Spiral</option>
+          <option value="rhombic">13. Rhombic Diamond Path</option>
+          <option value="heart">14. 3D Cardiomorphic Loop</option>
+          <option value="turbulence">15. Turbulence Noise Flight</option>
+          <option value="inceptionPush">16. Inception Push & Roll</option>
+        </select>
+      </div>
+
+      <div id="desktop-camera-scatter-item" class="setting-item camera-option-item desktop-camera-scatter-item">
+        <label for="camera-scatter-effect">Scatter Effect</label>
+        <select id="camera-scatter-effect" style="width: 100%; padding: 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.08); color: var(--text-primary); border: 1px solid var(--border); font-size: 12px; outline: none; cursor: pointer; margin-top: 5px;"></select>
+      </div>
+      
+      <div class="keyframe-list" id="keyframe-list">
+        <!-- Keyframe items added here -->
+      </div>
+      
+      <div class="camera-actions">
+        <div id="custom-keyframe-actions" class="camera-action-row">
+          <button id="btn-add-keyframe" class="btn btn-secondary" title="Add current camera view as keyframe">
+            <span class="keyframe-action-label">Add Keyframe</span><span class="keyframe-count-wrap">(<span id="keyframe-count">0</span>)</span>
+          </button>
+          <button id="btn-clear-keyframes" class="btn btn-secondary" title="Clear all keyframes">
+            Clear
+          </button>
+        </div>
+        <div class="camera-action-row">
+          <button id="btn-preview-path" class="btn btn-secondary" style="flex: 1; justify-content: center;" title="Preview camera path flight" disabled>
+            Preview
+          </button>
+          <button id="btn-export-video" class="btn btn-primary" disabled>
+            Export Video
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="preview-controls" class="preview-controls" aria-label="Preview controls">
+      <button id="btn-preview-toggle-renderer" class="btn btn-secondary" type="button">Switch Reality</button>
+      <button id="btn-preview-stop" class="btn btn-secondary" type="button">Stop Preview</button>
+      <button id="btn-preview-export" class="btn btn-primary" type="button">Export Video</button>
+    </div>
+    <div id="recording-controls" class="recording-controls" aria-label="Recording controls">
+      <span id="recording-indicator" class="recording-indicator">Recording</span>
+      <button id="btn-recording-toggle-renderer" class="btn btn-secondary" type="button">Switch Reality</button>
+      <button id="btn-recording-stop" class="btn btn-primary" type="button">Stop Export</button>
+    </div>
+    <!-- ========== Settings Panel ========== -->
+    <div class="settings-panel hidden" id="settings-panel">
+      <h3>Rendering Settings</h3>
+
+      <div class="mobile-setting-tabs" role="tablist" aria-label="Rendering parameters">
+        <button type="button" class="mobile-setting-tag active" data-setting-target="setting-crop-item">Crop</button>
+        <button type="button" class="mobile-setting-tag" data-setting-target="setting-size-item">Size</button>
+        <button type="button" class="mobile-setting-tag" data-setting-target="setting-brightness-item">Light</button>
+        <button type="button" class="mobile-setting-tag" data-setting-target="setting-density-item">Density</button>
+      </div>
+      
+      <div class="setting-item" style="display: none;">
+        <label for="setting-max-particles">Max Particles (Particle Cloud)</label>
+        <select id="setting-max-particles">
+          <option value="50000">50,000 (Fastest)</option>
+          <option value="150000">150,000 (Recommended)</option>
+          <option value="300000">300,000 (High Detail)</option>
+          <option value="500000" selected>500,000 (Maximum)</option>
+        </select>
+      </div>
+      <div id="setting-crop-item" class="setting-item mobile-parameter mobile-active">
+        <div class="setting-row-val">
+          <label for="setting-crop-factor">Filter Background (Crop)</label>
+          <span class="setting-val-display" id="setting-crop-factor-val">2.50x</span>
+        </div>
+        <input type="range" id="setting-crop-factor" min="0.50" max="3.00" step="0.05" value="2.50" list="crop-ticks">
+        <datalist id="crop-ticks">
+          <option value="0.5"></option>
+          <option value="1.0"></option>
+          <option value="1.5"></option>
+          <option value="2.0"></option>
+          <option value="2.5"></option>
+          <option value="3.0"></option>
+        </datalist>
+        <div class="slider-ticks">
+          <span>0.5x (Max)</span>
+          <span>1.0x</span>
+          <span>1.5x</span>
+          <span>2.0x</span>
+          <span>2.5x</span>
+          <span>3.0x (Off)</span>
+        </div>
+      </div>
+      <div class="setting-item" style="display: none;">
+        <div class="setting-row-val">
+          <label for="setting-min-opacity">Min Opacity (3DGS)</label>
+          <span class="setting-val-display" id="setting-min-opacity-val">0.50</span>
+        </div>
+        <input type="range" id="setting-min-opacity" min="0.0" max="0.5" step="0.05" value="0.50">
+      </div>
+      <div id="setting-size-item" class="setting-item mobile-parameter">
+        <div class="setting-row-val">
+          <label for="setting-point-size">Base Particle Size</label>
+          <span class="setting-val-display" id="setting-point-size-val">0.20</span>
+        </div>
+        <input type="range" id="setting-point-size" min="0.05" max="0.30" step="0.01" value="0.20">
+      </div>
+      <div id="setting-brightness-item" class="setting-item mobile-parameter">
+        <div class="setting-row-val">
+          <label for="setting-particle-brightness">Particle Brightness</label>
+          <span class="setting-val-display" id="setting-particle-brightness-val">0.70</span>
+        </div>
+        <input type="range" id="setting-particle-brightness" min="0.10" max="2.00" step="0.05" value="0.70">
+      </div>
+      <div id="setting-density-item" class="setting-item mobile-parameter">
+        <div class="setting-row-val">
+          <label for="setting-point-density">Point Cloud Density</label>
+          <span class="setting-val-display" id="setting-point-density-val">100%</span>
+        </div>
+        <input type="range" id="setting-point-density" min="0.01" max="1.00" step="0.01" value="1.00">
+      </div>
+      <div class="setting-item" style="display: none;">
+        <div class="setting-row-val">
+          <label for="setting-particle-softness">Particle Softness</label>
+          <span class="setting-val-display" id="setting-particle-softness-val">0.70</span>
+        </div>
+        <input type="range" id="setting-particle-softness" min="0.00" max="1.00" step="0.05" value="0.70">
+      </div>
+      <div class="setting-item" style="display: none;">
+        <div class="setting-row-val">
+          <label for="setting-particle-opacity">Particle Opacity</label>
+          <span class="setting-val-display" id="setting-particle-opacity-val">1.00</span>
+        </div>
+        <input type="range" id="setting-particle-opacity" min="0.00" max="1.00" step="0.05" value="1.00">
+      </div>
+      <div class="setting-item" style="display: none;">
+        <div class="setting-row-val">
+          <label for="setting-splat-scale">Splat Scale (3DGS)</label>
+          <span class="setting-val-display" id="setting-splat-scale-val">1.0</span>
+        </div>
+        <input type="range" id="setting-splat-scale" min="0.2" max="4.0" step="0.1" value="1.0">
+      </div>
+      <div id="desktop-scatter-anchor"></div>
+      <div id="scatter-effect-item" class="setting-item camera-option-item">
+        <label for="setting-scatter-effect">Scatter Effect (粒子分散效果)</label>
+        <select id="setting-scatter-effect" style="width: 100%; padding: 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.08); color: var(--text-primary); border: 1px solid var(--border); font-size: 12px; outline: none; cursor: pointer; margin-top: 5px;">
+          <option value="none" selected>No particle effects</option>
+          <option value="0">1. Original Explosion (原始无序粒子炸裂)</option>
+          <option value="1">2. Diagonal Sweep (角落对角线波前扫拂)</option>
+          <option value="3">3. Thanos Snap Dissolve (随机区块渐隐消散)</option>
+          <option value="8">4. Waterfall Downward Flow (由上而下瀑布流消散)</option>
+          <option value="11">5. Double Helix Upward (双螺旋结构向上攀升)</option>
+          <option value="16">6. Hologram 3D Printer (粒子逐层打印重组)</option>
+          <option value="13">7. Fractal Julia Orbit (分形几何轨道重组)</option>
+          <option value="14">8. Wind Snap Sweep (风吹飞砂由后向前扫拂)</option>
+          <option value="17">9. Rainfall Assembly (雨点下落重组)</option>
+        </select>
+      </div>
+    </div>
+    <!-- ========== Stats Panel ========== -->
+    <div class="stats-panel" id="stats-panel">
+      <div class="stat-row">
+        <span class="stat-label">Particles</span>
+        <span class="stat-value" id="stat-particles">0</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">FPS</span>
+        <span class="stat-value" id="stat-fps">0</span>
+      </div>
+      <!-- Flip Vertically Button -->
+      <button id="btn-flip-x" class="btn btn-secondary stats-action-button" title="Toggle model orientation (flip upside down)">
+        <span class="btn-text">Flip Vertically</span>
+      </button>
+      <button id="btn-toggle-rotation" class="btn btn-secondary stats-action-button" title="Stop model rotation">
+        <span class="btn-text">Stop Rotation</span>
+      </button>
+    </div>
+    <!-- ========== Progress Control ========== -->
+    <div class="progress-control" id="progress-control">
+      <div class="progress-label">
+        <span>Scatter / Gather</span>
+        <span class="progress-value" id="progress-value">0%</span>
+      </div>
+      <div class="progress-row" style="display: flex; align-items: center; gap: 8px; width: 100%;">
+        <input
+          type="range"
+          id="progress-slider"
+          class="progress-slider"
+          min="0"
+          max="100"
+          value="0"
+          step="1"
+          style="flex: 1;"
+        >
+        <!-- Auto-play Scatter Button -->
+        <button id="btn-play-scatter" class="btn btn-secondary" style="padding: 4px 8px; font-size: 10px; display: flex; align-items: center; justify-content: center; height: 24px; min-width: 32px; margin: 0;" title="Auto-play scatter effect (0-100-0)">
+          <span class="btn-icon-symbol scatter-play-icon"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-player-play"></use></svg></span>
+        </button>
+      </div>
+    </div>
+    <button id="btn-mobile-toggle-rotation" class="mobile-rotation-button" type="button" title="Stop model rotation" aria-label="Stop model rotation" aria-pressed="false">
+      <svg class="tabler-icon mobile-rotation-orbit" aria-hidden="true"><use href="#ti-view-360-arrow"></use></svg>
+      <svg class="tabler-icon mobile-rotation-ban" aria-hidden="true"><use href="#ti-slash"></use></svg>
+    </button>
+    <!-- ========== KIRI Engine Intro Panel ========== -->
+    <div class="kiri-intro-panel" id="kiri-intro-panel">
+      <div class="kiri-intro-header">
+        <span class="kiri-intro-title" id="kiri-intro-title"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-sparkles"></use></svg><span class="kiri-intro-title-text">About Kiri Engine</span></span>
+        <a href="https://www.kiriengine.app/" target="_blank" rel="noopener" class="kiri-visit-link" id="kiri-visit-link"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-arrow-right"></use></svg><span class="kiri-visit-link-text">Visit Kiri Engine</span></a>
+        <button id="btn-minimize-kiri" class="kiri-minimize-btn" title="Minimize" aria-label="Minimize"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-x"></use></svg></button>
+      </div>
+      <div class="kiri-intro-content" id="kiri-intro-content">
+        Kiri Engine turns real-world scenes into shareable 3D content. This tool imports 3DGS share links from Kiri Engine, Polycam, and Luma for custom camera paths, glowing particle effects, and gesture control.
+      </div>
+    </div>
+
+    <!-- ========== Webcam Preview ========== -->
+    <div class="webcam-container hidden" id="webcam-container">
+      <div class="webcam-preview">
+        <video id="webcam-video" autoplay playsinline muted></video>
+        <div class="webcam-label">
+          <span class="dot" id="webcam-dot"></span>
+          LIVE
+        </div>
+      </div>
+      <div class="gesture-guide" id="gesture-guide">
+        <div class="gesture-guide-item" id="guide-palm"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-hand-stop"></use></svg><span class="gesture-guide-text">张开手掌：粒子消散</span></div>
+        <div class="gesture-guide-item" id="guide-fist"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-hand-grab"></use></svg><span class="gesture-guide-text">握拳：粒子聚集</span></div>
+        <div class="gesture-guide-item" id="guide-victory"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-hand-two-fingers"></use></svg><span class="gesture-guide-text">剪刀手：切换模式</span></div>
+        <div class="gesture-guide-item" id="guide-zoom"><span class="gesture-pair" aria-hidden="true"><svg class="tabler-icon"><use href="#ti-hand-grab"></use></svg><svg class="tabler-icon"><use href="#ti-hand-grab"></use></svg></span><span class="gesture-guide-text">双拳缩放：缩放模型</span></div>
+        <div class="gesture-guide-item" id="guide-pointing"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-hand-finger"></use></svg><span class="gesture-guide-text">食指：控制模型视角</span></div>
+      </div>
+    </div>
+    <!-- ========== Welcome Hint (Landing Centered Box) ========== -->
+    <div class="welcome-hint" id="welcome-hint">
+      <div class="landing-card">
+        <div class="landing-logo">
+          <svg class="tabler-icon" aria-hidden="true"><use href="#ti-sparkles"></use></svg>
+          <span class="landing-maker-label">KIRI Maker</span>
+        </div>
+        <h2><span class="landing-title-text">KIRI Custom Effects & Camera Tool</span></h2>
+        <p>Paste a Kiri Engine, Polycam, or Luma share URL below to explore Particle Mode and 3D Reality.</p>
+        
+        <!-- Center Input Box -->
+        <div class="landing-input-box">
+          <input
+            type="text"
+            id="landing-url-input"
+            placeholder="Paste a Kiri Engine, Polycam, or Luma share URL..."
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <button id="landing-btn-random" class="landing-random-btn" type="button" title="Load a random sample model" aria-label="Load a random sample model">
+            <svg class="tabler-icon" aria-hidden="true"><use href="#ti-dice-5"></use></svg>
+          </button>
+          <button id="landing-btn-load" class="btn btn-primary" title="Load model">
+            <svg class="tabler-icon" aria-hidden="true"><use href="#ti-arrow-right"></use></svg>
+            <span class="btn-text">Load</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- ========== Loading Overlay ========== -->
+    <div class="loading-overlay" id="loading-overlay">
+      <div class="loading-ring">
+        <div class="ring"></div>
+        <div class="ring"></div>
+        <div class="ring"></div>
+      </div>
+      <div class="loading-text" id="loading-text">Loading...</div>
+      <div class="loading-progress">
+        <div class="bar" id="loading-bar"></div>
+      </div>
+      <button id="btn-cancel-composition" class="btn btn-secondary composition-cancel-button" type="button">
+        停止合成
+      </button>
+    </div>
+    <!-- ========== Toast Container ========== -->
+    <div class="toast-container" id="toast-container"></div>
+  </div>
+  <!-- App Entry Point -->
+  <script type="module" src="js/app.js?v=3.66"></script>
+</body>
+</html>
