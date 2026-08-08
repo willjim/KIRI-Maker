@@ -1,6 +1,10 @@
 # KIRI Maker
 
-KIRI Maker is a responsive browser-based tool for exploring 3D Gaussian Splatting models, particle effects, and cinematic camera paths. It loads public KIRI Engine, Polycam, and Luma share links, switches between Particle Mode and 3D Reality, and exports camera-path videos from desktop and mobile layouts.
+KIRI Maker is a responsive browser-based tool for exploring 3D Gaussian Splatting models, particle effects, and cinematic camera paths. It loads public KIRI Engine, Polycam, and Luma share links, switches between Particle Mode and original reconstructed scene, and exports camera-path videos from desktop and mobile layouts.
+
+## Demo
+
+https://kiri-maker.pages.dev/
 
 For the best experience, use the latest version of Chrome, Edge, or Safari. Video export availability and the final MP4 or WebM format depend on the browser's MediaRecorder, WebCodecs, and codec support.
 
