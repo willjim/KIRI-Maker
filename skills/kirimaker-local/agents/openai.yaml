@@ -1,0 +1,4 @@
+interface:
+  display_name: "Run KIRI Maker Locally"
+  short_description: "Launch the bundled KIRI Maker website on this computer"
+  default_prompt: "Use $kirimaker-local to run KIRI Maker locally and give me the clickable address."

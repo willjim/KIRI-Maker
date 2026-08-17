@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KIRI Maker User Guide — 3DGS & Particle Viewer</title>
+  <style>
+    :root {
+      --bg-color: #06060f;
+      --panel-bg: rgba(13, 13, 27, 0.7);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --text-color: #e2e2ec;
+      --text-muted: #9494a8;
+      --primary-color: #00f5d4;
+      --primary-glow: rgba(0, 245, 212, 0.15);
+      --secondary-color: #7b2cbf;
+      --secondary-glow: rgba(123, 44, 191, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    .svg-icon-sprite {
+      position: absolute;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .ui-icon {
+      display: inline-block;
+      width: 1em;
+      height: 1em;
+      flex: 0 0 auto;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      vertical-align: -0.125em;
+    }
+
+    .inline-icon {
+      margin-right: 3px;
+    }
+
+    .icon-pair {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .icon-pair .ui-icon {
+      width: 0.7em;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.6;
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* CSS Toggle Rules */
+    body.lang-en .lang-zh {
+      display: none !important;
+    }
+    body.lang-zh .lang-en {
+      display: none !important;
+    }
+
+    /* Language Toggle Container */
+    .lang-toggle-container {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.9rem;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .lang-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-weight: 500;
+      padding: 2px 8px;
+      transition: color 0.2s ease, text-shadow 0.2s ease;
+      outline: none;
+    }
+
+    .lang-btn.active {
+      color: var(--primary-color);
+      font-weight: 700;
+      text-shadow: 0 0 8px var(--primary-glow);
+    }
+
+    .lang-btn:hover {
+      color: #fff;
+    }
+
+    .lang-separator {
+      color: var(--border-color);
+      user-select: none;
+    }
+
+    .container {
+      max-width: 800px;
+      width: 100%;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff 30%, var(--primary-color) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+
+    .card {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 25px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      color: #fff;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+
+    p {
+      margin-bottom: 15px;
+      color: var(--text-color);
+    }
+
+    ul, ol {
+      margin-bottom: 15px;
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    strong {
+      color: #fff;
+    }
+
+    /* Table styles */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      margin-bottom: 15px;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+      color: var(--primary-color);
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    td {
+      color: var(--text-color);
+      vertical-align: middle;
+    }
+
+    .icon-col {
+      font-size: 1.8rem;
+      text-align: center;
+      width: 80px;
+    }
+
+    .gesture-name {
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+    }
+
+    /* Tip box */
+    .tip-box {
+      background: rgba(0, 245, 212, 0.03);
+      border-left: 4px solid var(--primary-color);
+      padding: 15px 20px;
+      border-radius: 0 12px 12px 0;
+      margin: 20px 0;
+    }
+
+    .tip-box h3 {
+      color: var(--primary-color);
+      font-size: 1rem;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tip-box p {
+      margin-bottom: 0;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    /* Buttons */
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, var(--secondary-color), #5a189a);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 15px var(--secondary-glow);
+      transition: all 0.2s ease;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .btn-back:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(123, 44, 191, 0.4);
+    }
+
+    /* Highlight badge */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .badge-spark {
+      background: var(--primary-glow);
+      color: var(--primary-color);
+      border: 1px solid rgba(0, 245, 212, 0.2);
+    }
+
+    .badge-cloud {
+      background: rgba(255, 255, 255, 0.05);
+      color: #e2e2ec;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  </style>
+</head>
+<body class="lang-zh">
+  <!-- Selected Tabler Icons, MIT License: https://github.com/tabler/tabler-icons/blob/main/LICENSE -->
+  <svg class="svg-icon-sprite" aria-hidden="true">
+    <symbol id="icon-folder-open" viewBox="0 0 24 24">
+      <path d="M5 19l2.757 -7.351a1 1 0 0 1 .936 -.649h12.307a1 1 0 0 1 .986 1.164l-.996 5.211a2 2 0 0 1 -1.964 1.625h-14.026a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2h4l3 3h7a2 2 0 0 1 2 2v2"/>
+    </symbol>
+    <symbol id="icon-mouse" viewBox="0 0 24 24">
+      <path d="M6 7a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v10a4 4 0 0 1 -4 4h-4a4 4 0 0 1 -4 -4l0 -10M12 7l0 4"/>
+    </symbol>
+    <symbol id="icon-sparkles" viewBox="0 0 24 24">
+      <path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6"/>
+    </symbol>
+    <symbol id="icon-atom" viewBox="0 0 24 24">
+      <path d="M12 12v.01M19.071 4.929c-1.562 -1.562 -6 .337 -9.9 4.243c-3.905 3.905 -5.804 8.337 -4.242 9.9c1.562 1.561 6 -.338 9.9 -4.244c3.905 -3.905 5.804 -8.337 4.242 -9.9M4.929 4.929c-1.562 1.562 .337 6 4.243 9.9c3.905 3.905 8.337 5.804 9.9 4.242c1.561 -1.562 -.338 -6 -4.244 -9.9c-3.905 -3.905 -8.337 -5.804 -9.9 -4.242"/>
+    </symbol>
+    <symbol id="icon-video" viewBox="0 0 24 24">
+      <path d="M15 10l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -1.447 .894l-4.553 -2.276v-4M3 8a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2l0 -8"/>
+    </symbol>
+    <symbol id="icon-rocket" viewBox="0 0 24 24">
+      <path d="M4 13a8 8 0 0 1 7 7a6 6 0 0 0 3 -5a9 9 0 0 0 6 -8a3 3 0 0 0 -3 -3a9 9 0 0 0 -8 6a6 6 0 0 0 -5 3M7 14a6 6 0 0 0 -3 6a6 6 0 0 0 6 -3M14 9a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/>
+    </symbol>
+    <symbol id="icon-player-play" viewBox="0 0 24 24">
+      <path d="M7 4v16l13 -8l-13 -8"/>
+    </symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24">
+      <path d="M12 5l0 14M5 12l14 0"/>
+    </symbol>
+    <symbol id="icon-movie" viewBox="0 0 24 24">
+      <path d="M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12M8 4l0 16M16 4l0 16M4 8l4 0M4 16l4 0M4 12l16 0M16 8l4 0M16 16l4 0"/>
+    </symbol>
+    <symbol id="icon-bulb" viewBox="0 0 24 24">
+      <path d="M3 12h1m8 -9v1m8 8h1m-15.4 -6.4l.7 .7m12.1 -.7l-.7 .7M9 16a5 5 0 1 1 6 0a3.5 3.5 0 0 0 -1 3a2 2 0 0 1 -4 0a3.5 3.5 0 0 0 -1 -3M9.7 17l4.6 0"/>
+    </symbol>
+    <symbol id="icon-hand-stop" viewBox="0 0 24 24">
+      <path d="M8 13v-7.5a1.5 1.5 0 0 1 3 0v6.5M11 5.5v-2a1.5 1.5 0 1 1 3 0v8.5M14 5.5a1.5 1.5 0 0 1 3 0v6.5M17 7.5a1.5 1.5 0 0 1 3 0v8.5a6 6 0 0 1 -6 6h-1.792a6 6 0 0 1 -5.012 -2.7l-.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/>
+    </symbol>
+    <symbol id="icon-hand-grab" viewBox="0 0 24 24">
+      <path d="M8 11v-3.5a1.5 1.5 0 0 1 3 0v2.5M11 9.5v-3a1.5 1.5 0 0 1 3 0v3.5M14 7.5a1.5 1.5 0 0 1 3 0v2.5M17 9.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-1.792a6 6 0 0 1 -5.012 -2.7l-.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/>
+    </symbol>
+    <symbol id="icon-hand-two-fingers" viewBox="0 0 24 24">
+      <path d="M8 13v-8.5a1.5 1.5 0 0 1 3 0v7.5M17 11.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-1.792a6 6 0 0 1 -5.012 -2.7l-.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47M14 10.5a1.5 1.5 0 0 1 3 0v1.5M11 5.5v-2a1.5 1.5 0 1 1 3 0v8.5"/>
+    </symbol>
+    <symbol id="icon-hand-finger" viewBox="0 0 24 24">
+      <path d="M8 13v-8.5a1.5 1.5 0 0 1 3 0v7.5M11 11.5v-2a1.5 1.5 0 1 1 3 0v2.5M14 10.5a1.5 1.5 0 0 1 3 0v1.5M17 11.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-1.792a6 6 0 0 1 -5.012 -2.7l-.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/>
+    </symbol>
+  </svg>
+  <!-- Language Toggle Switcher -->
+  <div class="lang-toggle-container" hidden>
+    <button id="btn-lang-zh" class="lang-btn">中</button>
+    <span class="lang-separator">/</span>
+    <button id="btn-lang-en" class="lang-btn">EN</button>
+  </div>
+
+  <div class="container">
+    <header>
+      <h1 class="lang-zh">KIRI Maker 自定义特效运镜工具</h1>
+      <h1 class="lang-en">KIRI Maker User Guide</h1>
+      <p class="subtitle lang-zh">用户操作与使用指南</p>
+      <p class="subtitle lang-en">User Operations & Guidelines Manual</p>
+    </header>
+
+    <!-- 1. 加载模型 / Loading Models -->
+    <div class="card">
+      <h2 class="lang-zh"><svg class="ui-icon" aria-hidden="true"><use href="#icon-folder-open"></use></svg> 1. 快速入门：加载 3D 模型</h2>
+      <h2 class="lang-en"><svg class="ui-icon" aria-hidden="true"><use href="#icon-folder-open"></use></svg> 1. Quick Start: Loading 3D Models</h2>
+      
+      <p class="lang-zh">系统支持从网络分享链接直接解析并展示 3D 照片模型：</p>
+      <p class="lang-en">The system fetches and renders 3DGS Gaussian splats and particle models directly from supported public share URLs:</p>
+      
+      <ol class="lang-zh">
+        <li><strong>通过分享链接加载</strong>：在首页中央的输入框（或者在模型加载后的顶部菜单栏）粘贴 Kiri Engine、Polycam、Luma 或 Insta360 分享地址，然后点击「<strong>加载</strong>」按钮。系统会自动解析并加载 PLY、Splat 或 SOG 模型。</li>
+      </ol>
+      <ol class="lang-en">
+        <li><strong>Load via Share Link</strong>: Paste a Kiri Engine, Polycam, Luma, or Insta360 share URL in the centered input box (or in the top toolbar after loading), then click the <strong>Load</strong> button. The system automatically fetches, parses, and loads PLY, Splat, or SOG model data.</li>
+      </ol>
+    </div>
+
+    <!-- 2. 基础操控 / Basic Operations -->
+    <div class="card">
+      <h2 class="lang-zh"><svg class="ui-icon" aria-hidden="true"><use href="#icon-mouse"></use></svg> 2. 基础操作：场景视角与常规调节</h2>
+      <h2 class="lang-en"><svg class="ui-icon" aria-hidden="true"><use href="#icon-mouse"></use></svg> 2. Basic Operations: Viewport & Adjustments</h2>
+      
+      <ul class="lang-zh">
+        <li><strong>视角旋转</strong>：在 3D 画布区域，按住 <strong>鼠标左键</strong> 并拖拽。</li>
+        <li><strong>视角平移</strong>：按住 <strong>鼠标右键</strong> 并拖拽。</li>
+        <li><strong>场景缩放</strong>：滚动 <strong>鼠标中键滚轮</strong>。系统支持极小距离缩放，可将视角拉得极近来观测模型微小细节。</li>
+        <li><strong>渲染模式切换</strong>：
+          <ul>
+            <li><span class="badge badge-spark"><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-sparkles"></use></svg>3D 实景</span>：照片级写实的高保真 3D 高斯着色画面。新导入模型默认关闭背景裁剪；可在「渲染设置 → 3DGS 设置」中开启并调整裁剪范围与形状，后续切换菜单时会保留设置。</li>
+            <li><span class="badge badge-cloud"><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-atom"></use></svg>粒子模式</span>：展现充满未来科技感的荧光圆点粒子状态。</li>
+          </ul>
+        </li>
+      </ul>
+      <ul class="lang-en">
+        <li><strong>Rotate View</strong>: Press and hold the <strong>Left Mouse Button</strong> and drag on the 3D canvas area.</li>
+        <li><strong>Pan View</strong>: Press and hold the <strong>Right Mouse Button</strong> and drag.</li>
+        <li><strong>Zooming</strong>: Scroll the <strong>Middle Mouse Wheel</strong>. The system supports micro-distance zooming, allowing you to get extremely close to observe fine details of the model.</li>
+        <li><strong>Initial Auto-Fit Zoom</strong>: When a model loads, regardless of the background filter radius, the default camera will <strong>accurately align and fit to a 1x radius distance of the model's centroid</strong>, placing the subject directly in the center at close range.</li>
+        <li><strong>Toggle Render Mode & Clipping Rules</strong>:
+          <ul>
+            <li><span class="badge badge-spark"><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-sparkles"></use></svg>3D Reality Mode</span>: Photorealistic high-fidelity 3D Gaussian Splatting rendering. Background cropping is off for each newly imported model. Open <strong>Rendering Settings → 3DGS Settings</strong> to enable it and adjust its bounds or shape; the setting is then preserved while navigating between menus.</li>
+            <li><span class="badge badge-cloud"><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-atom"></use></svg>Particle Mode</span>: Renders glowing holographic-style floating particles. Its independent background crop can hide environmental noise without changing the 3DGS crop.</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+
+    <!-- 3. 运镜录制 / Camera Path Recording -->
+    <div class="card">
+      <h2 class="lang-zh"><svg class="ui-icon" aria-hidden="true"><use href="#icon-video"></use></svg> 3. 电影级运镜录制与 19 套内置运镜预设</h2>
+      <h2 class="lang-en"><svg class="ui-icon" aria-hidden="true"><use href="#icon-video"></use></svg> 3. Cinematic Flight Path Recording & 19 Built-in Presets</h2>
+      
+      <p class="lang-zh">点击顶部的 <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-video"></use></svg>镜头运镜</strong> 开启运镜控制台，制作属于您的电影级运镜视频：</p>
+      <p class="lang-en">Click the <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-video"></use></svg>Camera Path</strong> button at the top to open the flight path console and record your own aerial tracking videos:</p>
+      
+      <div class="tip-box lang-zh" style="background: rgba(123, 44, 191, 0.03); border-left: 4px solid var(--secondary-color);">
+        <h3 style="color: var(--secondary-color);"><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-rocket"></use></svg>新增：19 套复合型运镜</h3>
+        <p>我们内置了 19 套高级运镜预设（包含希区柯克滑动变焦、8 字形无限循环、空间纵深进入、横向平移扫景与朝外环绕等）。这些预设轨迹<strong>完全基于您当前的缩放大小与仰角</strong>动态计算。</p>
+      </div>
+      <div class="tip-box lang-en" style="background: rgba(123, 44, 191, 0.03); border-left: 4px solid var(--secondary-color);">
+        <h3 style="color: var(--secondary-color);"><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-rocket"></use></svg>New: 19 Built-in Camera Paths</h3>
+        <p>We have integrated 19 advanced camera presets, including Hitchcock Dolly Zoom, Figure-8 loops, spatial depth entry, lateral scene sweeps, and outward-facing spatial orbits. These trajectories are dynamically calculated <strong>from the current zoom and pitch</strong>.</p>
+      </div>
+
+      <p class="lang-zh"><strong>星际穿越流星汇聚</strong>粒子特效可与「空间纵深缓慢进入」组合使用：模型从远处光点完整靠近，前景星粒子按运镜时长汇聚，并在导出时保持一致的色彩与速度。</p>
+      <p class="lang-en">Pair <strong>Interstellar Warp Meteor Assembly</strong> with Spatial Depth Entry for a coherent model approach, duration-aware foreground stars, and matching color and timing in exported video.</p>
+
+      <ol class="lang-zh">
+        <li><strong>使用内置运镜预设</strong>：在<strong>运镜预设</strong>下拉菜单中选择一套内置运镜（如希区柯克变焦），点击 <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-player-play"></use></svg>预览</strong>即可开始预览。<strong>在预览运行期间，网页会自动锁定页面缩放防止误触</strong>。</li>
+        <li><strong>自定义记录关键帧</strong>：选择<strong>自定义关键帧</strong>模式，调整视角后点击 <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-plus"></use></svg>添加关键帧</strong>记录不限数量的视角。点击任意视角卡片可恢复其相机位置和观察目标，再点击 <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-player-play"></use></svg>预览</strong>即可沿轨迹平滑运镜。</li>
+        <li><strong>每秒 60 帧导出视频</strong>：无论选择预设还是自定义路径，点击 <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-movie"></use></svg>导出视频</strong>都会自动启用 1080p 渲染并生成每秒 60 帧的 MP4 视频，完成后即可保存。</li>
+      </ol>
+      <ol class="lang-en">
+        <li><strong>Built-in Presets</strong>: Select a flight path preset from the <strong>Flight Path Preset</strong> dropdown (e.g., <em>Hitchcock Dolly Zoom</em>), then click <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-player-play"></use></svg>Preview</strong> to begin. <strong>During the preview, page zoom controls are locked to avoid misclicks</strong>.</li>
+        <li><strong>Custom Keyframes</strong>: Under the <em>None (Custom Keyframes)</em> mode, add as many viewpoints as needed. Click an entire viewpoint card to restore its saved camera position and target, then click <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-player-play"></use></svg>Preview</strong> to fly smoothly along the custom path.</li>
+        <li><strong>60FPS Video Export</strong>: Click <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-movie"></use></svg>Export 1080p MP4</strong> under any mode. The system triggers offscreen 1080p WebGL rendering with a decoupled virtual timestamp step. Regardless of GPU lag, the exported MP4/WebM video is guaranteed to have a constant 60 FPS playback rate and will download automatically.</li>
+      </ol>
+    </div>
+
+    <!-- 4. 手势控制 / Gesture Control -->
+    <div class="card">
+      <h2 class="lang-zh"><svg class="ui-icon" aria-hidden="true"><use href="#icon-hand-stop"></use></svg> 4. 核心体验：智能手势追踪</h2>
+      <h2 class="lang-en"><svg class="ui-icon" aria-hidden="true"><use href="#icon-hand-stop"></use></svg> 4. Core Experience: Intelligent AI Gesture Tracking</h2>
+      
+      <p class="lang-zh">点击工具栏的 <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-hand-stop"></use></svg>手势控制</strong>按钮并授权摄像头。开启后，在摄像头前展示特定手势即可控制场景：</p>
+      <p class="lang-en">Click the <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-hand-stop"></use></svg>Gesture</strong> button in the toolbar to grant camera access. Once enabled, display specific gestures in front of the camera to control the scene:</p>
+      
+      <div class="tip-box lang-zh">
+        <h3><svg class="ui-icon" aria-hidden="true"><use href="#icon-bulb"></use></svg>识别小贴士</h3>
+        <p>请保持手部光线充足并距摄像头 0.5 ~ 1.5 米。系统内置 8 帧防抖动缓冲和低通指数平滑滤波，动作表现非常柔和线性，不用担心手发抖导致画面乱颤。</p>
+      </div>
+      <div class="tip-box lang-en">
+        <h3><svg class="ui-icon" aria-hidden="true"><use href="#icon-bulb"></use></svg>Detection Tips</h3>
+        <p>Please ensure adequate lighting and maintain a distance of 0.5 to 1.5 meters from the camera. The system features an 8-frame anti-shake buffer and low-pass exponential smoothing filters for smooth, linear motion feedback.</p>
+      </div>
+
+      <table>
+        <thead>
+          <tr class="lang-zh">
+            <th class="icon-col">手势</th>
+            <th style="width: 150px;">动作名称</th>
+            <th>交互效果</th>
+          </tr>
+          <tr class="lang-en">
+            <th class="icon-col">Gesture</th>
+            <th style="width: 150px;">Name</th>
+            <th>Interaction</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Palm -->
+          <tr>
+            <td class="icon-col"><svg class="ui-icon" aria-hidden="true"><use href="#icon-hand-stop"></use></svg></td>
+            <td class="gesture-name lang-zh">张开手掌</td>
+            <td class="gesture-name lang-en">Open Palm</td>
+            <td class="lang-zh"><strong>粒子散开消散</strong>：在粒子模式下，模型粒子将根据您的手指张开幅度向四周扩散消散。</td>
+            <td class="lang-en"><strong>Particle Dispersal</strong>: In Particle Mode, particles scatter outwards based on how wide you open your palm.</td>
+          </tr>
+          <!-- Fist -->
+          <tr>
+            <td class="icon-col"><svg class="ui-icon" aria-hidden="true"><use href="#icon-hand-grab"></use></svg></td>
+            <td class="gesture-name lang-zh">攥拳头</td>
+            <td class="gesture-name lang-en">Closed Fist</td>
+            <td class="lang-zh"><strong>粒子聚拢收缩</strong>：在粒子模式下，已散开的粒子会向中心收缩，拼回原本的密集模型。</td>
+            <td class="lang-en"><strong>Particle Assembly</strong>: In Particle Mode, scattered particles gather back towards the center to restore the dense model.</td>
+          </tr>
+          <!-- Victory -->
+          <tr>
+            <td class="icon-col"><svg class="ui-icon" aria-hidden="true"><use href="#icon-hand-two-fingers"></use></svg></td>
+            <td class="gesture-name lang-zh">剪刀手</td>
+            <td class="gesture-name lang-en">Victory</td>
+            <td class="lang-zh"><strong>切换渲染模式</strong>：在摄像头前比出该手势并<strong>保持超过 0.7 秒</strong>可触发切换。会在 3D 实景与粒子模式之间进行切换。</td>
+            <td class="lang-en"><strong>Toggle Render Mode</strong>: Strike the Victory sign and <strong>hold it for over 0.7 seconds</strong> to toggle rendering between 3D Reality and Particle Mode.</td>
+          </tr>
+          <!-- Two Fists Zoom -->
+          <tr>
+            <td class="icon-col"><span class="icon-pair" aria-hidden="true"><svg class="ui-icon"><use href="#icon-hand-grab"></use></svg><svg class="ui-icon"><use href="#icon-hand-grab"></use></svg></span></td>
+            <td class="gesture-name lang-zh">双手攥拳</td>
+            <td class="gesture-name lang-en">Two Fists</td>
+            <td class="lang-zh"><strong>双手距离缩放</strong>：同时展示两只手的攥拳状态。当两拳距离靠近或拉远时，可以无级调整 3D 模型的物理尺寸大小。</td>
+            <td class="lang-en"><strong>Two-Hand Distance Zoom</strong>: Present two closed fists. Bring your fists closer or further apart to dynamically scale the 3D model size.</td>
+          </tr>
+          <!-- Pointing Up -->
+          <tr>
+            <td class="icon-col"><svg class="ui-icon" aria-hidden="true"><use href="#icon-hand-finger"></use></svg></td>
+            <td class="gesture-name lang-zh">食指指向</td>
+            <td class="gesture-name lang-en">Pointing Up</td>
+            <td class="lang-zh"><strong>遥控相机视角</strong>：比出单指指向上方后，在空中移手，相机会精确跟踪您的食指指尖轨迹进行平滑视角旋转。</td>
+            <td class="lang-en"><strong>Remote Camera Rotation</strong>: Show a pointing finger and move your hand. The camera will smoothly follow the trajectory of your index finger tip.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="text-align: center; margin-top: 10px;">
+      <a class="btn-back lang-zh" href="javascript:window.close();">关闭本页，返回浏览器</a>
+      <a class="btn-back lang-en" href="javascript:window.close();">Close Page, Back to Viewer</a>
+    </div>
+  </div>
+
+  <script>
+    const btnZh = document.getElementById('btn-lang-zh');
+    const btnEn = document.getElementById('btn-lang-en');
+    
+    function setLanguage(lang) {
+      if (lang === 'zh') {
+        document.body.classList.add('lang-zh');
+        document.body.classList.remove('lang-en');
+        btnZh.classList.add('active');
+        btnEn.classList.remove('active');
+        localStorage.setItem('guide-lang', 'zh');
+      } else {
+        document.body.classList.add('lang-en');
+        document.body.classList.remove('lang-zh');
+        btnEn.classList.add('active');
+        btnZh.classList.remove('active');
+        localStorage.setItem('guide-lang', 'en');
+      }
+    }
+    
+    btnZh.addEventListener('click', () => setLanguage('zh'));
+    btnEn.addEventListener('click', () => setLanguage('en'));
+    
+    // English is the default while the language switcher is hidden.
+    setLanguage('en');
+  </script>
+</body>
+</html>
