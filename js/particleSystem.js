@@ -14,6 +14,7 @@ const vertexShader = /* glsl */ `
   attribute vec3 aRandomDir;
   attribute float aRandomSpeed;
   attribute float aPhaseOffset;
+  attribute float aSourceOpacity;
   attribute vec3 aColor;
   uniform float uProgress;
   uniform float uTime;
@@ -492,14 +493,21 @@ const vertexShader = /* glsl */ `
     float spatialTransition = mix(1.0 - reverseCloudReveal, localSplatInterp, outwardMode);
 
     vec3 posInterp = mix(pointCloudPos, aOriginalPosition, spatialTransition);
-    if (effectId == 20 && outwardMode > 0.5) {
-      // Interstellar -> 3DGS: never pull the star field into a temporary ball.
-      // The existing center-out wave instead pushes each point radially away
-      // while its alpha fades and the Gaussian layer becomes visible.
-      vec3 burstDirection = normalize(aOriginalPosition + aRandomDir * 0.18 + vec3(0.0001));
-      float burstProgress = smoothstep(0.0, 1.0, localSplatInterp);
-      float burstDistance = (0.42 + aRandomSpeed * 0.24) * burstProgress;
-      posInterp = pointCloudPos + burstDirection * burstDistance;
+    if (effectId == 20) {
+      if (outwardMode > 0.5) {
+        // Interstellar -> 3DGS: never pull the star field into a temporary ball.
+        // The existing center-out wave instead pushes each point radially away
+        // while its alpha fades and the Gaussian layer becomes visible.
+        vec3 burstDirection = normalize(aOriginalPosition + aRandomDir * 0.18 + vec3(0.0001));
+        float burstProgress = smoothstep(0.0, 1.0, localSplatInterp);
+        float burstDistance = (0.42 + aRandomSpeed * 0.24) * burstProgress;
+        posInterp = pointCloudPos + burstDirection * burstDistance;
+      } else {
+        // 3DGS -> interstellar particles is a visibility cross-fade. Keeping
+        // particles at their current effect positions removes the unwanted
+        // full-size model -> spherical point shrink during mode switching.
+        posInterp = pointCloudPos;
+      }
     }
     vec4 mvPosition = modelViewMatrix * vec4(posInterp, 1.0);
     gl_Position = projectionMatrix * mvPosition;
@@ -511,9 +519,11 @@ const vertexShader = /* glsl */ `
     standardSize *= (1.0 + easedProgress * 0.5);
     if (effectId == 20) {
       float modelDotSize = min(standardSize * (1.0 + effectModelGlow * 2.8), 11.0);
+      // Keep distant stars restrained, then grow them more aggressively as
+      // they approach the camera to strengthen the fly-through impact.
       float starPointSize = min(
-        standardSize * (0.46 + effectAccent * 0.30 + effectImpact * 2.40),
-        14.0
+        standardSize * (0.46 + effectAccent * 0.30 + effectImpact * 3.60),
+        20.0
       );
       standardSize = mix(modelDotSize, starPointSize, effectAccent);
     }
@@ -563,7 +573,8 @@ const vertexShader = /* glsl */ `
     float forwardAlpha = pointCloudAlpha * pow(1.0 - localSplatInterp, 3.0) + forwardBand * 0.12;
     float reverseAlpha = pointCloudAlpha * pow(reverseCloudReveal, 1.8);
     reverseAlpha += reverseBand * 0.28 * (1.0 - uSplatInterpolation);
-    vAlpha = mix(reverseAlpha, forwardAlpha, outwardMode) * fadeOut * effectReveal;
+    vAlpha = mix(reverseAlpha, forwardAlpha, outwardMode)
+      * fadeOut * effectReveal * clamp(aSourceOpacity, 0.0, 1.0);
   }
 `;
 // Fragment Shader
@@ -667,7 +678,7 @@ export class ParticleSystem {
    * @param {THREE.Scene} scene
    */
   createFromData(data, scene) {
-    const { positions, colors, count } = data;
+    const { positions, colors, opacities, count } = data;
     this.particleCount = count;
     // Clean up existing
     this.dispose();
@@ -701,6 +712,9 @@ export class ParticleSystem {
     const randomDirs = new Float32Array(count * 3);
     const randomSpeeds = new Float32Array(count);
     const phaseOffsets = new Float32Array(count);
+    const sourceOpacities = opacities?.length >= count
+      ? opacities
+      : new Float32Array(count).fill(1);
     for (let i = 0; i < count; i++) {
       // Random direction on unit sphere
       const theta = Math.random() * Math.PI * 2;
@@ -784,6 +798,7 @@ export class ParticleSystem {
     const orderedRandomDirs = reorderFloat32Attribute(randomDirs, 3, renderOrder);
     const orderedRandomSpeeds = reorderFloat32Attribute(randomSpeeds, 1, renderOrder);
     const orderedPhaseOffsets = reorderFloat32Attribute(phaseOffsets, 1, renderOrder);
+    const orderedSourceOpacities = reorderFloat32Attribute(sourceOpacities, 1, renderOrder);
 
     // --- Create geometry ---
     this.geometry = new THREE.BufferGeometry();
@@ -793,6 +808,7 @@ export class ParticleSystem {
     this.geometry.setAttribute('aRandomDir', new THREE.BufferAttribute(orderedRandomDirs, 3));
     this.geometry.setAttribute('aRandomSpeed', new THREE.BufferAttribute(orderedRandomSpeeds, 1));
     this.geometry.setAttribute('aPhaseOffset', new THREE.BufferAttribute(orderedPhaseOffsets, 1));
+    this.geometry.setAttribute('aSourceOpacity', new THREE.BufferAttribute(orderedSourceOpacities, 1));
     this.updateDrawRange();
     // --- Create material ---
     // Additive emission lets overlapping particles build genuine luminous
@@ -805,7 +821,7 @@ export class ParticleSystem {
         uTime: { value: 0.0 },
         uPointSize: { value: 0.5 },
         uLogicalPointSize: { value: 0.5 },
-        uParticleBrightness: { value: 0.7 },
+        uParticleBrightness: { value: 0.77 },
         uParticleSoftness: { value: 0.7 },
         uParticleOpacity: { value: 1.0 },
         uExportColorCompensation: { value: 0.0 },
@@ -944,6 +960,42 @@ export class ParticleSystem {
    */
   getProgress() {
     return this.currentProgress;
+  }
+  /**
+   * Return the coherent-model scale used by the interstellar effect shader.
+   * Keeping this calculation in one place lets the app apply the exact same
+   * arrival scale to the 3DGS mesh during particle/reality cross-fades.
+   */
+  getStarModelScale() {
+    const effectId = Math.round(this.material?.uniforms.uVectorField?.value || 0);
+    if (effectId !== 20) return 1;
+
+    const shaderProgress = this.getShaderProgress(this.currentProgress);
+    const easedProgress = shaderProgress * shaderProgress * (3 - 2 * shaderProgress);
+    const gatherProgress = 1 - easedProgress;
+    const arrivalScale = Math.max(
+      1,
+      Number(this.material?.uniforms.uStarModelArrivalScale?.value) || 1
+    );
+    const modelGatherProgress = Math.max(0, Math.min(1, gatherProgress * arrivalScale));
+    const smoothstepInput = Math.max(0, Math.min(1, (modelGatherProgress - 0.04) / 0.96));
+    const scaleApproach = Math.pow(
+      smoothstepInput * smoothstepInput * (3 - 2 * smoothstepInput),
+      1.2
+    );
+    return THREE.MathUtils.lerp(0.00065, 1, scaleApproach);
+  }
+
+  /**
+   * Copy the shader's local scale anchor into the particle pivot's space.
+   */
+  getStarScaleAnchorInPivot(target = new THREE.Vector3()) {
+    target.copy(this.material?.uniforms.uStarScaleAnchor?.value || new THREE.Vector3());
+    if (this.points) {
+      this.points.updateMatrix();
+      target.applyMatrix4(this.points.matrix);
+    }
+    return target;
   }
   /**
    * Update particle system each frame.

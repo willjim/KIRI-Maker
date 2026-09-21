@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { parsePLY, parseSplat } from './plyParser.js';
-import { ParticleSystem } from './particleSystem.js?v=6.0';
+import { ParticleSystem } from './particleSystem.js?v=6.3';
 import { GestureControl } from './gestureControl.js?v=1.1';
 import { extractPLYFromUrl, downloadPLY } from './kiriLoader.js?v=2.1';
 import fixWebmDuration from 'fix-webm-duration';
@@ -190,7 +190,7 @@ const state = {
     minOpacity: 0.50,
     pointSize: 0.20,         // default point size for soft additive-glow particles
     pointDensity: 1.00,      // default point cloud density (100%)
-    particleBrightness: 0.70, // default particle brightness multiplier
+    particleBrightness: 0.77, // 10% brighter than the previous 0.70 default
     particleSoftness: 0.70,   // default softness multiplier
     particleOpacity: 1.00,    // default particle opacity multiplier
     splatScale: 1.0,
@@ -2230,7 +2230,7 @@ function resetMobileSettingsParameter() {
     const activeTarget = document.querySelector('.mobile-particle-setting-tag.active')?.dataset.settingTarget;
     const sliderDefaults = {
       'setting-size-item': [dom.settingPointSize, 0.20],
-      'setting-brightness-item': [dom.settingParticleBrightness, 0.70],
+      'setting-brightness-item': [dom.settingParticleBrightness, 0.77],
       'setting-density-item': [dom.settingPointDensity, 1.00],
     };
     if (activeTarget === 'setting-crop-item') {
@@ -2300,6 +2300,60 @@ function syncModelRendererVisibility() {
   }
   if (state.sparkRenderer) {
     state.sparkRenderer.visible = showSpark;
+  }
+}
+
+const splatStarAnchor = new THREE.Vector3();
+const splatBasePosition = new THREE.Vector3();
+
+/**
+ * Keep the 3DGS model on the same coherent arrival scale as effect 20's point
+ * cloud. Position compensation around the captured first-frame anchor prevents
+ * off-centre compositions from drifting while the model grows.
+ */
+function syncSplatStarEffectTransform() {
+  if (!state.splatMesh || !state.particleSystem) return;
+
+  const rotation = getModelRotation();
+  const modelScale = Number.isFinite(state.modelScale) ? state.modelScale : 1;
+  const displayScale = Number.isFinite(state.settings.splatScale)
+    ? state.settings.splatScale
+    : 1;
+  const center = state.modelCenter || { x: 0, y: 0, z: 0 };
+
+  state.splatMesh.rotation.copy(rotation);
+  splatBasePosition.set(
+    -center.x * modelScale,
+    -center.y * modelScale,
+    -center.z * modelScale
+  ).applyEuler(rotation);
+
+  const starEffectActive = state.settings.particleEffectEnabled
+    && Math.round(Number(state.settings.scatterEffect) || 0) === 20;
+  const starScale = starEffectActive
+    ? state.particleSystem.getStarModelScale()
+    : 1;
+
+  state.splatMesh.scale.setScalar(modelScale * displayScale * starScale);
+  if (starEffectActive) {
+    state.particleSystem.getStarScaleAnchorInPivot(splatStarAnchor);
+    if (state.particleSystem.pivot && state.splatPivot) {
+      state.particleSystem.pivot.updateWorldMatrix(true, false);
+      state.splatPivot.updateWorldMatrix(true, false);
+      state.particleSystem.pivot.localToWorld(splatStarAnchor);
+      state.splatPivot.worldToLocal(splatStarAnchor);
+    } else {
+      // During initial mesh construction the shared 3DGS pivot does not exist
+      // yet; its default transform is identity while particle display scale is
+      // already stored on the particle pivot.
+      splatStarAnchor.multiplyScalar(displayScale);
+    }
+    state.splatMesh.position.copy(splatBasePosition)
+      .sub(splatStarAnchor)
+      .multiplyScalar(starScale)
+      .add(splatStarAnchor);
+  } else {
+    state.splatMesh.position.copy(splatBasePosition);
   }
 }
 // ============================================================
@@ -3149,7 +3203,7 @@ async function loadFromUrl() {
         try {
           const buffer = await downloadPLY(tryUrl, (p) => {
             updateLoadingProgress(0.2 + p * 0.5, `Downloading: ${Math.round(p * 100)}%`);
-          });
+          }, fileFormat);
           return { buffer, fileFormat };
         } catch (error) {
           lastDownloadError = error;
@@ -3264,11 +3318,12 @@ function createParticleDataFromSplatMesh(mesh, onProgress, options = {}) {
     throw new Error('Decoded SOG model does not contain readable Gaussian splats');
   }
   const maxParticles = Math.max(1, options.maxParticles || 500000);
-  const minOpacity = Number.isFinite(options.minOpacity) ? options.minOpacity : 0.1;
+  const minOpacity = Number.isFinite(options.minOpacity) ? options.minOpacity : (1 / 255);
   const sampleStep = Math.max(1, Math.ceil(total / maxParticles));
   const capacity = Math.ceil(total / sampleStep);
   const positions = new Float32Array(capacity * 3);
   const colors = new Float32Array(capacity * 3);
+  const opacities = new Float32Array(capacity);
   let count = 0;
 
   mesh.forEachSplat((index, center, _scales, _quaternion, opacity, color) => {
@@ -3280,6 +3335,7 @@ function createParticleDataFromSplatMesh(mesh, onProgress, options = {}) {
     colors[count * 3] = THREE.MathUtils.clamp(color.r, 0, 1);
     colors[count * 3 + 1] = THREE.MathUtils.clamp(color.g, 0, 1);
     colors[count * 3 + 2] = THREE.MathUtils.clamp(color.b, 0, 1);
+    opacities[count] = THREE.MathUtils.clamp(opacity, 0, 1);
     count++;
     if (index % 50000 === 0) onProgress?.(index / total);
   });
@@ -3289,6 +3345,7 @@ function createParticleDataFromSplatMesh(mesh, onProgress, options = {}) {
   return {
     positions: positions.slice(0, count * 3),
     colors: colors.slice(0, count * 3),
+    opacities: opacities.slice(0, count),
     count,
   };
 }
@@ -3389,7 +3446,11 @@ async function processBuffer(buffer, name, isFreshLoad = false, options = {}) {
         updateLoadingProgress(0.86 + p * 0.02, `Creating particles: ${Math.round(p * 100)}%`);
       }, {
         maxParticles: state.settings.maxParticles,
-        minOpacity: state.settings.minOpacity,
+        // SOG scenes often build foliage and other foreground detail from
+        // low-opacity splats. Preserve every visibly encoded Gaussian and pass
+        // its source alpha into the point shader so both render modes describe
+        // the same spatial content.
+        minOpacity: 1 / 255,
       });
     } else {
       const parseModel = fileFormat === 'ply' ? parsePLY : parseSplat;
@@ -3485,6 +3546,7 @@ async function processBuffer(buffer, name, isFreshLoad = false, options = {}) {
         
       // Set default opacity based on current interpolation setting
       mesh.opacity = state.splatInterpolation;
+      syncSplatStarEffectTransform();
       configureSplatCrop(mesh, data);
       // Add splat mesh to the pivot group (ensuring matching world-space rotation Y direction)
       state.splatPivot = new THREE.Group();
@@ -3957,6 +4019,7 @@ function animate() {
     if (state.splatPivot && state.particleSystem?.pivot) {
       state.splatPivot.rotation.y = state.particleSystem.pivot.rotation.y;
     }
+    syncSplatStarEffectTransform();
   }
   // Camera Path Flight Animation (interpolates camera positions and targets)
   if (state.previewActive) {
@@ -5918,6 +5981,7 @@ function resetExportPlayback(session) {
   state.particleSystem?.setProgressImmediate(initialParticleProgress);
   applyCurrentFlightProgress(0);
   state.particleSystem?.captureStarScaleAnchor(state.camera, state.controls?.target);
+  syncSplatStarEffectTransform();
   state.renderer.render(state.scene, state.camera);
 }
 
@@ -5969,6 +6033,7 @@ function renderExportFrame(session, timelineTime, flightProgress) {
   if (state.splatPivot && state.particleSystem?.pivot) {
     state.splatPivot.rotation.y = state.particleSystem.pivot.rotation.y;
   }
+  syncSplatStarEffectTransform();
   return Boolean(
     state.sparkPrewarmActive
     || (
@@ -6003,6 +6068,7 @@ function restoreAfterExport(session) {
     state.particleSystem.setSplatInterpolation(session.restoreInterpolation);
     state.particleSystem.setProgressImmediate(session.restoreParticleProgress);
   }
+  syncSplatStarEffectTransform();
   state.settings.originalFov = session.restoreOriginalFov;
   state.settings.flightStartSpherical = session.restoreFlightStartSpherical;
   restoreRendererAfterExport(session.originalWidth, session.originalHeight, session.pixelRatio);
@@ -6795,15 +6861,7 @@ function setupEventListeners() {
       }
       
       // Keep Spark aligned with the particle model after the flip.
-      if (state.splatMesh) {
-        const scale = state.modelScale;
-        const center = state.modelCenter;
-        if (center) {
-          alignSplatMesh(state.splatMesh, scale, center);
-        } else {
-          applyModelRotation(state.splatMesh);
-        }
-      }
+      syncSplatStarEffectTransform();
       
       showToast(state.xFlipped ? 'Model inverted vertically' : 'Model orientation restored', 'success');
     });
@@ -6887,7 +6945,7 @@ function setupEventListeners() {
         }
       }
       if (state.splatMesh) {
-        state.splatMesh.scale.setScalar(state.modelScale * scale);
+        syncSplatStarEffectTransform();
       }
     }
   });

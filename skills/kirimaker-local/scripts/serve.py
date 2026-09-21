@@ -86,12 +86,18 @@ def parse_insta360_share_page(html):
     match = re.search(r'id=["\']__NEXT_DATA__["\'][^>]*>([\s\S]*?)</script>', html)
     if not match:
         raise ValueError("Page does not contain Insta360 model data")
-    task_detail = (
-        json.loads(match.group(1))
-        .get("props", {})
-        .get("pageProps", {})
-        .get("taskDetail", {})
-    )
+    next_data = json.loads(match.group(1))
+    if not isinstance(next_data, dict):
+        next_data = {}
+    props = next_data.get("props")
+    if not isinstance(props, dict):
+        props = {}
+    page_props = props.get("pageProps")
+    if not isinstance(page_props, dict):
+        page_props = {}
+    task_detail = page_props.get("taskDetail")
+    if not isinstance(task_detail, dict):
+        task_detail = {}
     outputs = task_detail.get("outputs")
     if not isinstance(outputs, list):
         raise ValueError("Insta360 task does not contain model outputs")

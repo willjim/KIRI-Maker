@@ -64,19 +64,29 @@ export async function extractPLYFromUrl(shareUrl, { forceRefresh = false } = {})
  * Download a SOG/PLY/Splat file directly from the source CDN. Luma distributes
  * its Gaussian PLY inside a ZIP archive, which is unpacked locally in the browser.
  */
-export async function downloadPLY(url, onProgress) {
+export async function downloadPLY(url, onProgress, resolvedFormat = null) {
   const cleanUrl = url.replace(/\\u002F/g, '/');
   const pathname = new URL(cleanUrl).pathname.toLowerCase();
   const isZip = pathname.endsWith('.zip');
+  const normalizedResolvedFormat = typeof resolvedFormat === 'string'
+    ? resolvedFormat.trim().toLowerCase()
+    : '';
+  const explicitFormat = normalizedResolvedFormat === 'sog'
+    ? 'SOG'
+    : normalizedResolvedFormat === 'splat'
+      ? 'Splat'
+      : normalizedResolvedFormat === 'ply'
+        ? 'PLY'
+        : null;
   const format = isZip
     ? 'ZIP'
-    : pathname.endsWith('.sog')
+    : explicitFormat || (pathname.endsWith('.sog')
     ? 'SOG'
     : pathname.endsWith('.splat')
       ? 'Splat'
       : pathname.endsWith('.ply')
         ? 'PLY'
-        : null;
+        : null);
   if (!format) throw new Error('Unsupported model format. Expected SOG, ZIP, PLY, or Splat.');
   console.log(`Downloading ${format === 'ZIP' ? 'compressed PLY' : format} directly from CDN`);
   const controller = new AbortController();

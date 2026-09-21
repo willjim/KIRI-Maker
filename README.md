@@ -40,7 +40,7 @@ The recognition pipeline uses confidence thresholds, frame-history voting, stabi
 - [KIRI Engine](https://www.kiriengine.app/) 3DGS share links
 - [Polycam](https://poly.cam/) Capture share links
 - [Luma](https://lumalabs.ai/) Capture share links
-- [Insta360](https://app.insta360.com/3dspace) 3D Space share links (SOG)
+- Insta360 Spatial Capture share links (SOG)
 
 ## Run Locally with the Bundled Skill
 
