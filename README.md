@@ -1,103 +1,76 @@
 # KIRI Maker
 
-KIRI Maker is a responsive browser-based tool for exploring 3D Gaussian Splatting models, particle effects, and cinematic camera paths. It loads public KIRI Engine, Polycam, and Luma share links, switches between Particle Mode and original reconstructed scene, and exports camera-path videos from desktop and mobile layouts.
+KIRI Maker is a responsive 3D Gaussian Splatting effects and camera-path tool for desktop and mobile browsers. It loads public KIRI Engine, Polycam, Luma, and Insta360 share links, switches smoothly between Particle Mode and 3D Reality, and exports cinematic videos from built-in or custom camera paths.
 
-## Demo
-
-https://kiri-maker.pages.dev/
-
-For the best experience, use the latest version of Chrome, Edge, or Safari. Video export availability and the final MP4 or WebM format depend on the browser's MediaRecorder, WebCodecs, and codec support.
+For the best experience, use the latest version of Chrome, Edge, or Safari. Video export availability and output format depend on the browser's support for MediaRecorder, MP4, and WebM.
 
 ## Features
 
-- Load public 3DGS models from KIRI Engine, Polycam, and Luma share links
-- Click the dice button on the landing page to load one of four bundled KIRI Engine sample links at random
-- Adjust particle size, brightness, density, opacity, softness, splat scale, and background cropping
-- Apply 9 particle scatter and assembly effects
-- Use 16 built-in cinematic camera-path presets
+- Load public 3DGS models directly from KIRI Engine, Polycam, Luma, and Insta360 share links
+- Download PLY, Splat, and Insta360 SOG assets automatically, and unpack compressed Luma PLY files locally in the browser
+- Switch smoothly between Particle Mode and 3D Reality
+- Pause or resume automatic model rotation while previewing and adjusting render modes
+- Adjust particle size, brightness, density, opacity, softness, and independent Particle Mode background cropping
+- Crop 3DGS content with editable ellipsoid or box volumes and direct X/Y/Z face handles
+- Paint and confirm surface-aware Gaussian splat erasures, with brush sizing and undo support
+- Apply 10 particle scatter and assembly effects, including the Interstellar Warp Meteor Assembly
+- Use 19 built-in cinematic camera-path presets
+- Record unlimited custom camera-path keyframes on desktop and mobile
+- Restore any saved camera position and observation target by clicking its full viewpoint card
+- Preview smooth, constant-speed custom paths using centripetal Catmull–Rom interpolation
 - Preview camera movement, particle assembly, and renderer transitions before export
-- Switch rendering modes and play particle effects during preview or recording
 - Export 1080p video at 60 FPS when supported by the browser
+- Use an English-first responsive interface for desktop, tablet, and mobile layouts
 - Control supported interactions with MediaPipe hand gestures on desktop
-
-## Model Loading
-
-Paste a supported public share URL into the landing-page input and select **Load**. 
-
-The dice button beside **Load** immediately selects and loads one of four built-in KIRI Engine examples. It is intended as a quick way to try KIRI Maker without finding a share link first.
-
-### Supported Share Links
-
-- [KIRI Engine](https://www.kiriengine.app/) 3DGS share links
-- [Polycam](https://poly.cam/) Capture share links
-- [Luma](https://lumalabs.ai/) Capture share links
-
-## Camera Paths and Keyframes
-
-KIRI Maker provides two camera-path workflows:
-
-- **Built-in presets:** Choose one of 16 cinematic paths.
-- **Custom paths:** Each keyframe stores the current camera position and target.
 
 ## Gesture Controls
 
 Enable MediaPipe Gesture Recognizer on a supported desktop browser:
 
-- 🤚 Open palm: increase particle dispersal
-- 👊 Closed fist: gather particles
-- ☝️ Pointing finger: control the model view
-- 👊👊 Two fists moving closer or farther apart: scale the model
-- ✌️ Victory gesture held for 0.7 seconds: switch between Particle Mode and 3D Reality
+- Open palm: increase particle dispersal
+- Closed fist: gather particles
+- Pointing finger: control the model view
+- Two fists moving closer or farther apart: scale the model
+- Victory gesture held for 0.7 seconds: switch between Particle Mode and 3D Reality
 
 The recognition pipeline uses confidence thresholds, frame-history voting, stability checks, and hand-direction filtering to reduce accidental actions.
 
-## Run Locally with the Skill
+## Supported Share Links
 
-Send the following to the Agent you are using:
-```
-Please install the skill named "kirimaker-local" from https://github.com/willjim/KIRI-Maker locally.
-```
-Once the installation is complete, send "run KIRI Maker" to launch the local web interface.
+- [KIRI Engine](https://www.kiriengine.app/) 3DGS share links
+- [Polycam](https://poly.cam/) Capture share links
+- [Luma](https://lumalabs.ai/) Capture share links
+- Insta360 Spatial Capture share links (SOG)
 
-## Deployment
+## Run Locally with the Bundled Skill
 
-The repository is configured for Cloudflare Pages:
+The `skills/kirimaker-local` directory contains a self-contained local launcher that does not require npm installation. After installing the skill, ask your agent to “run KIRI Maker locally” to receive a clickable loopback URL.
 
-- `wrangler.toml` publishes the repository root as the Pages output directory.
-- `functions/resolve.js` handles supported share-link resolution.
-
-No application build step or npm dependency installation is required for the static frontend.
+The browser still needs internet access for external rendering libraries and public model assets.
 
 ## Project Structure
 
 ```text
-KIRI-Maker/
-├── index.html                         # Main application and inline Tabler SVG sprite
-├── guide.html                         # Bilingual user guide (English by default)
+project-root/
+├── index.html
+├── guide.html
 ├── css/
-│   └── style.css                      # Desktop, tablet, and mobile interface styles
+│   └── style.css
 ├── js/
-│   ├── app.js                         # Application state, UI, loading, camera paths, and export
-│   ├── gestureControl.js              # MediaPipe gesture recognition and stabilization
-│   ├── kiriLoader.js                  # Share resolver client and model downloading
-│   ├── landingBackground.js           # Animated landing-page background
-│   ├── particleSystem.js              # Particle rendering and scatter effects
-│   └── plyParser.js                   # PLY parsing and particle data preparation
+│   ├── app.js
+│   ├── gestureControl.js
+│   ├── kiriLoader.js
+│   ├── landingBackground.js
+│   ├── particleSystem.js
+│   └── plyParser.js
 ├── functions/
-│   └── resolve.js                     # Cloudflare Pages share-link resolver
+│   └── resolve.js
 ├── skills/
 │   └── kirimaker-local/
-│       ├── SKILL.md                   # Local-launch workflow instructions
-│       ├── agents/
-│       │   └── openai.yaml            # Skill metadata
-│       ├── scripts/
-│       │   └── serve.py               # Loopback server and local resolver
-│       └── assets/                    # Self-contained application bundle
-├── .gitignore                         # Local cache, build, and backup exclusions
-├── .pagesignore                       # Cloudflare Pages deployment exclusions
-├── LICENSE                            # MIT License
+├── .pagesignore
+├── LICENSE
 ├── README.md
-└── wrangler.toml                      # Cloudflare Pages configuration
+└── wrangler.toml
 ```
 
 ## Technology and Acknowledgements
@@ -116,4 +89,4 @@ KIRI Maker is built with and supported by the following projects:
 
 ## License
 
-KIRI Maker is open-source software released under the [MIT License](LICENSE).
+KIRI Maker is released under the [MIT License](LICENSE).

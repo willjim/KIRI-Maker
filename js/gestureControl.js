@@ -149,11 +149,11 @@ export class GestureControl {
     if (landmarks && (smoothedGesture === 'Victory' || this.isTwoFingersExtended(landmarks))) {
       smoothedGesture = 'Victory';
     }
-    // Check custom Pointing_Up gesture.
+    // Check custom Pointing_Up gesture
     if (landmarks && (smoothedGesture === 'Pointing_Up' || this.isPointingUpGesture(landmarks))) {
       smoothedGesture = 'Pointing_Up';
     }
-    // Check the two-hand closed-fist zoom gesture.
+    // Check two-hand closed-fist zoom gesture
     let isZoomActiveRaw = false;
     let indexTip1 = null;
     let indexTip2 = null;
@@ -383,7 +383,7 @@ export class GestureControl {
     return isIndexExtended && isMiddleExtended && isRingFolded && isPinkyFolded;
   }
   /**
-   * Check if index finger is extended and all other fingers are folded.
+   * Check if index finger is extended, and all other fingers folded.
    */
   isPointingUpGesture(landmarks) {
     const wrist = landmarks[0];
@@ -465,20 +465,20 @@ export class GestureControl {
     };
   }
   /**
-   * Get the Tabler sprite icon name for a gesture.
+   * Get the inline SVG symbol ID for a gesture.
    */
   getGestureIcon(gesture) {
     const map = {
-      'Open_Palm': 'hand-stop',
-      'Closed_Fist': 'hand-grab',
-      'Pointing_Up': 'hand-finger',
-      'Pointing_Up_Two_Hands': 'hand-grab',
-      'Thumb_Up': 'thumb-up',
-      'Thumb_Down': 'thumb-down',
-      'Victory': 'hand-two-fingers',
-      'none': 'hand-stop',
+      'Open_Palm': 'icon-hand-stop',
+      'Closed_Fist': 'icon-hand-grab',
+      'Pointing_Up': 'icon-hand-finger',
+      'Pointing_Up_Two_Hands': 'icon-hand-grab',
+      'Thumb_Up': 'icon-hand-stop',
+      'Thumb_Down': 'icon-hand-stop',
+      'Victory': 'icon-hand-two-fingers',
+      'none': 'icon-hand-stop',
     };
-    return map[gesture] || 'hand-stop';
+    return map[gesture] || 'icon-hand-stop';
   }
   /**
    * Get label for gesture.

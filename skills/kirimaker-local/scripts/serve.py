@@ -5,6 +5,7 @@ import argparse
 import json
 import os
 import re
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -13,8 +14,6 @@ from pathlib import Path
 
 
 SOURCES = {
-    "www.remy3d.cn": "legacy",
-    "remy3d.cn": "legacy",
     "www.kiriengine.app": "kiri",
     "kiriengine.app": "kiri",
     "www.kiriengine.com": "kiri",
@@ -23,16 +22,17 @@ SOURCES = {
     "www.poly.cam": "polycam",
     "lumalabs.ai": "luma",
     "www.lumalabs.ai": "luma",
+    "app.insta360.com": "insta360",
 }
 POLYCAM_PUBLIC_DATABASE = "https://polycam-a4a1e.firebaseio.com"
 
 
-def parse_nuxt_share_page(html, is_kiri):
+def parse_nuxt_share_page(html):
     match = re.search(r'id="__NUXT_DATA__"[^>]*>([\s\S]*?)</script>', html)
     if not match:
         raise ValueError("Page does not contain Nuxt model data")
     data = json.loads(match.group(1))
-    result = {"source": "kiri" if is_kiri else "legacy", "splatUrl": None, "plyUrl": None, "pcdUrl": None, "camerasUrl": None}
+    result = {"source": "kiri", "splatUrl": None, "plyUrl": None, "pcdUrl": None, "camerasUrl": None}
     unsupported_mesh = None
     for value in data:
         if not isinstance(value, str):
@@ -52,10 +52,10 @@ def parse_nuxt_share_page(html, is_kiri):
             elif not result["plyUrl"] or "3DGS.ply" in value or "/output/" in value:
                 result["plyUrl"] = value
     if not result["splatUrl"] and not result["plyUrl"]:
-        if is_kiri and unsupported_mesh:
+        if unsupported_mesh:
             raise ValueError("This KIRI Engine share is a Mesh model, not 3DGS")
         raise ValueError("No supported Splat or PLY asset found")
-    result["name"] = find_name(data, "KIRI Engine Model" if is_kiri else "3D Model")
+    result["name"] = find_name(data, "KIRI Engine Model")
     return result
 
 
@@ -80,6 +80,55 @@ def parse_luma_share_page(html):
         "splatUrl": None,
         "camerasUrl": None,
     }
+
+
+def parse_insta360_share_page(html):
+    match = re.search(r'id=["\']__NEXT_DATA__["\'][^>]*>([\s\S]*?)</script>', html)
+    if not match:
+        raise ValueError("Page does not contain Insta360 model data")
+    next_data = json.loads(match.group(1))
+    if not isinstance(next_data, dict):
+        next_data = {}
+    props = next_data.get("props")
+    if not isinstance(props, dict):
+        props = {}
+    page_props = props.get("pageProps")
+    if not isinstance(page_props, dict):
+        page_props = {}
+    task_detail = page_props.get("taskDetail")
+    if not isinstance(task_detail, dict):
+        task_detail = {}
+    outputs = task_detail.get("outputs")
+    if not isinstance(outputs, list):
+        raise ValueError("Insta360 task does not contain model outputs")
+    result = {
+        "source": "insta360",
+        "name": task_detail.get("title") or "Insta360 Model",
+        "sogUrl": None,
+        "splatUrl": None,
+        "plyUrl": None,
+        "pcdUrl": None,
+        "camerasUrl": None,
+    }
+    for output in outputs:
+        if not isinstance(output, dict):
+            continue
+        url = output.get("url")
+        if not isinstance(url, str) or not url.startswith("https://"):
+            continue
+        file_format = str(output.get("fileFormat") or "").lower()
+        output_type = str(output.get("type") or "").lower()
+        if output_type == "model" and file_format == "sog":
+            result["sogUrl"] = url
+        elif output_type == "model" and file_format == "splat":
+            result["splatUrl"] = url
+        elif output_type == "model" and file_format == "ply":
+            result["plyUrl"] = url
+        elif file_format == "json" and re.search(r'cameras\.json(?:\?|$)', url, re.IGNORECASE):
+            result["camerasUrl"] = url
+    if not result["sogUrl"] and not result["splatUrl"] and not result["plyUrl"]:
+        raise ValueError("No supported SOG, Splat, or PLY asset found")
+    return result
 
 
 def resolve_polycam(parsed):
@@ -179,24 +228,45 @@ class Handler(SimpleHTTPRequestHandler):
             if source == "polycam":
                 result = resolve_polycam(parsed)
             else:
-                valid_path = parsed.path.startswith("/capture/") if source == "luma" else (
-                    parsed.path.startswith("/share/") if source == "kiri" else
-                    parsed.path.startswith("/share/") or parsed.path.startswith("/model/")
-                )
+                if source == "luma":
+                    valid_path = parsed.path.startswith("/capture/")
+                elif source == "insta360":
+                    valid_path = parsed.path.startswith("/3dspace/detail/")
+                else:
+                    valid_path = parsed.path.startswith("/share/")
                 if not valid_path:
                     self.send_text("Unsupported share URL path", 403)
                     return
-                referer = "https://www.kiriengine.app/" if source == "kiri" else (
-                    "https://lumalabs.ai/" if source == "luma" else "https://www.remy3d.cn/"
-                )
-                request = urllib.request.Request(target, headers={
+                if source == "luma":
+                    referer = "https://lumalabs.ai/"
+                elif source == "insta360":
+                    referer = "https://app.insta360.com/"
+                else:
+                    referer = "https://www.kiriengine.app/"
+                upstream_query = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
+                upstream_query.append(("_kirimaker_refresh", str(int(time.time() * 1000))))
+                upstream_url = urllib.parse.urlunsplit((
+                    parsed.scheme,
+                    parsed.netloc,
+                    parsed.path,
+                    urllib.parse.urlencode(upstream_query),
+                    parsed.fragment,
+                ))
+                request = urllib.request.Request(upstream_url, headers={
                     "Accept": "text/html,application/xhtml+xml",
+                    "Cache-Control": "no-cache, no-store, max-age=0",
+                    "Pragma": "no-cache",
                     "Referer": referer,
                     "User-Agent": "Mozilla/5.0 AppleWebKit/537.36 Chrome/120 Safari/537.36",
                 })
                 with urllib.request.urlopen(request, timeout=30) as response:
                     html = response.read().decode("utf-8", errors="replace")
-                result = parse_luma_share_page(html) if source == "luma" else parse_nuxt_share_page(html, source == "kiri")
+                if source == "luma":
+                    result = parse_luma_share_page(html)
+                elif source == "insta360":
+                    result = parse_insta360_share_page(html)
+                else:
+                    result = parse_nuxt_share_page(html)
             body = json.dumps(result, ensure_ascii=False).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")

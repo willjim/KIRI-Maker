@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KIRI Maker User Guide</title>
+  <title>KIRI Maker User Guide — 3DGS & Particle Viewer</title>
   <style>
     :root {
       --bg-color: #06060f;
@@ -23,7 +23,11 @@
       padding: 0;
     }
 
-    .tabler-sprite {
+    [hidden] {
+      display: none !important;
+    }
+
+    .svg-icon-sprite {
       position: absolute;
       width: 0;
       height: 0;
@@ -31,7 +35,8 @@
       pointer-events: none;
     }
 
-    .tabler-icon {
+    .ui-icon {
+      display: inline-block;
       width: 1em;
       height: 1em;
       flex: 0 0 auto;
@@ -40,17 +45,20 @@
       stroke-width: 2;
       stroke-linecap: round;
       stroke-linejoin: round;
-      vertical-align: -0.15em;
+      vertical-align: -0.125em;
     }
 
-    .icon-label {
+    .inline-icon {
+      margin-right: 3px;
+    }
+
+    .icon-pair {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
     }
 
-    .heading-icon {
-      font-size: 1.15em;
+    .icon-pair .ui-icon {
+      width: 0.7em;
     }
 
     body {
@@ -88,10 +96,6 @@
       border: 1px solid var(--border-color);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-    }
-
-    .lang-toggle-container[hidden] {
-      display: none !important;
     }
 
     .lang-btn {
@@ -210,25 +214,10 @@
       vertical-align: middle;
     }
 
-    .gesture-icon-col {
+    .icon-col {
+      font-size: 1.8rem;
       text-align: center;
       width: 80px;
-    }
-
-    .gesture-icon-col .tabler-icon {
-      width: 30px;
-      height: 30px;
-      color: var(--primary-color);
-    }
-
-    .gesture-icon-pair {
-      display: inline-flex;
-      gap: 2px;
-    }
-
-    .gesture-icon-pair .tabler-icon {
-      width: 25px;
-      height: 25px;
     }
 
     .gesture-name {
@@ -286,9 +275,7 @@
 
     /* Highlight badge */
     .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
+      display: inline-block;
       padding: 2px 8px;
       font-size: 0.8rem;
       font-weight: 600;
@@ -310,170 +297,171 @@
     }
   </style>
 </head>
-<body class="lang-en">
-  <svg class="tabler-sprite" aria-hidden="true">
-    <symbol id="ti-folder" viewBox="0 0 24 24"><path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2"/></symbol>
-    <symbol id="ti-mouse" viewBox="0 0 24 24"><path d="M6 7a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v10a4 4 0 0 1 -4 4h-4a4 4 0 0 1 -4 -4l0 -10"/><path d="M12 7l0 4"/></symbol>
-    <symbol id="ti-settings" viewBox="0 0 24 24"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/></symbol>
-    <symbol id="ti-sparkles" viewBox="0 0 24 24"><path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6"/></symbol>
-    <symbol id="ti-atom" viewBox="0 0 24 24"><path d="M12 12v.01"/><path d="M19.071 4.929c-1.562 -1.562 -6 .337 -9.9 4.243c-3.905 3.905 -5.804 8.337 -4.242 9.9c1.562 1.561 6 -.338 9.9 -4.244c3.905 -3.905 5.804 -8.337 4.242 -9.9"/><path d="M4.929 4.929c-1.562 1.562 .337 6 4.243 9.9c3.905 3.905 8.337 5.804 9.9 4.242c1.561 -1.562 -.338 -6 -4.244 -9.9c-3.905 -3.905 -8.337 -5.804 -9.9 -4.242"/></symbol>
-    <symbol id="ti-rocket" viewBox="0 0 24 24"><path d="M4 13a8 8 0 0 1 7 7a6 6 0 0 0 3 -5a9 9 0 0 0 6 -8a3 3 0 0 0 -3 -3a9 9 0 0 0 -8 6a6 6 0 0 0 -5 3"/><path d="M7 14a6 6 0 0 0 -3 6a6 6 0 0 0 6 -3"/><path d="M14 9a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/></symbol>
-    <symbol id="ti-plus" viewBox="0 0 24 24"><path d="M12 5l0 14"/><path d="M5 12l14 0"/></symbol>
-    <symbol id="ti-player-play" viewBox="0 0 24 24"><path d="M7 4v16l13 -8l-13 -8"/></symbol>
-    <symbol id="ti-video" viewBox="0 0 24 24"><path d="M15 10l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -1.447 .894l-4.553 -2.276v-4"/><path d="M3 8a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2l0 -8"/></symbol>
-    <symbol id="ti-bulb" viewBox="0 0 24 24"><path d="M3 12h1m8 -9v1m8 8h1m-15.4 -6.4l.7 .7m12.1 -.7l-.7 .7"/><path d="M9 16a5 5 0 1 1 6 0a3.5 3.5 0 0 0 -1 3a2 2 0 0 1 -4 0a3.5 3.5 0 0 0 -1 -3"/><path d="M9.7 17l4.6 0"/></symbol>
-    <symbol id="ti-hand-stop" viewBox="0 0 24 24"><path d="M8 13v-7.5a1.5 1.5 0 0 1 3 0v6.5"/><path d="M11 5.5v-2a1.5 1.5 0 1 1 3 0v8.5"/><path d="M14 5.5a1.5 1.5 0 0 1 3 0v6.5"/><path d="M17 7.5a1.5 1.5 0 0 1 3 0v8.5a6 6 0 0 1 -6 6h-2h.208a6 6 0 0 1 -5.012 -2.7a69.74 69.74 0 0 1 -.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/></symbol>
-    <symbol id="ti-hand-grab" viewBox="0 0 24 24"><path d="M8 11v-3.5a1.5 1.5 0 0 1 3 0v2.5"/><path d="M11 9.5v-3a1.5 1.5 0 0 1 3 0v3.5"/><path d="M14 7.5a1.5 1.5 0 0 1 3 0v2.5"/><path d="M17 9.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-2h.208a6 6 0 0 1 -5.012 -2.7l-.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/></symbol>
-    <symbol id="ti-hand-two-fingers" viewBox="0 0 24 24"><path d="M8 13v-8.5a1.5 1.5 0 0 1 3 0v7.5"/><path d="M17 11.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-2h.208a6 6 0 0 1 -5.012 -2.7a69.74 69.74 0 0 1 -.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/><path d="M14 10.5a1.5 1.5 0 0 1 3 0v1.5"/><path d="M11 5.5v-2a1.5 1.5 0 1 1 3 0v8.5"/></symbol>
-    <symbol id="ti-hand-finger" viewBox="0 0 24 24"><path d="M8 13v-8.5a1.5 1.5 0 0 1 3 0v7.5"/><path d="M11 11.5v-2a1.5 1.5 0 1 1 3 0v2.5"/><path d="M14 10.5a1.5 1.5 0 0 1 3 0v1.5"/><path d="M17 11.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-2h.208a6 6 0 0 1 -5.012 -2.7a69.74 69.74 0 0 1 -.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/></symbol>
+<body class="lang-zh">
+  <!-- Selected Tabler Icons, MIT License: https://github.com/tabler/tabler-icons/blob/main/LICENSE -->
+  <svg class="svg-icon-sprite" aria-hidden="true">
+    <symbol id="icon-folder-open" viewBox="0 0 24 24">
+      <path d="M5 19l2.757 -7.351a1 1 0 0 1 .936 -.649h12.307a1 1 0 0 1 .986 1.164l-.996 5.211a2 2 0 0 1 -1.964 1.625h-14.026a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2h4l3 3h7a2 2 0 0 1 2 2v2"/>
+    </symbol>
+    <symbol id="icon-mouse" viewBox="0 0 24 24">
+      <path d="M6 7a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v10a4 4 0 0 1 -4 4h-4a4 4 0 0 1 -4 -4l0 -10M12 7l0 4"/>
+    </symbol>
+    <symbol id="icon-sparkles" viewBox="0 0 24 24">
+      <path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6"/>
+    </symbol>
+    <symbol id="icon-atom" viewBox="0 0 24 24">
+      <path d="M12 12v.01M19.071 4.929c-1.562 -1.562 -6 .337 -9.9 4.243c-3.905 3.905 -5.804 8.337 -4.242 9.9c1.562 1.561 6 -.338 9.9 -4.244c3.905 -3.905 5.804 -8.337 4.242 -9.9M4.929 4.929c-1.562 1.562 .337 6 4.243 9.9c3.905 3.905 8.337 5.804 9.9 4.242c1.561 -1.562 -.338 -6 -4.244 -9.9c-3.905 -3.905 -8.337 -5.804 -9.9 -4.242"/>
+    </symbol>
+    <symbol id="icon-video" viewBox="0 0 24 24">
+      <path d="M15 10l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -1.447 .894l-4.553 -2.276v-4M3 8a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2l0 -8"/>
+    </symbol>
+    <symbol id="icon-rocket" viewBox="0 0 24 24">
+      <path d="M4 13a8 8 0 0 1 7 7a6 6 0 0 0 3 -5a9 9 0 0 0 6 -8a3 3 0 0 0 -3 -3a9 9 0 0 0 -8 6a6 6 0 0 0 -5 3M7 14a6 6 0 0 0 -3 6a6 6 0 0 0 6 -3M14 9a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/>
+    </symbol>
+    <symbol id="icon-player-play" viewBox="0 0 24 24">
+      <path d="M7 4v16l13 -8l-13 -8"/>
+    </symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24">
+      <path d="M12 5l0 14M5 12l14 0"/>
+    </symbol>
+    <symbol id="icon-movie" viewBox="0 0 24 24">
+      <path d="M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12M8 4l0 16M16 4l0 16M4 8l4 0M4 16l4 0M4 12l16 0M16 8l4 0M16 16l4 0"/>
+    </symbol>
+    <symbol id="icon-bulb" viewBox="0 0 24 24">
+      <path d="M3 12h1m8 -9v1m8 8h1m-15.4 -6.4l.7 .7m12.1 -.7l-.7 .7M9 16a5 5 0 1 1 6 0a3.5 3.5 0 0 0 -1 3a2 2 0 0 1 -4 0a3.5 3.5 0 0 0 -1 -3M9.7 17l4.6 0"/>
+    </symbol>
+    <symbol id="icon-hand-stop" viewBox="0 0 24 24">
+      <path d="M8 13v-7.5a1.5 1.5 0 0 1 3 0v6.5M11 5.5v-2a1.5 1.5 0 1 1 3 0v8.5M14 5.5a1.5 1.5 0 0 1 3 0v6.5M17 7.5a1.5 1.5 0 0 1 3 0v8.5a6 6 0 0 1 -6 6h-1.792a6 6 0 0 1 -5.012 -2.7l-.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/>
+    </symbol>
+    <symbol id="icon-hand-grab" viewBox="0 0 24 24">
+      <path d="M8 11v-3.5a1.5 1.5 0 0 1 3 0v2.5M11 9.5v-3a1.5 1.5 0 0 1 3 0v3.5M14 7.5a1.5 1.5 0 0 1 3 0v2.5M17 9.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-1.792a6 6 0 0 1 -5.012 -2.7l-.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/>
+    </symbol>
+    <symbol id="icon-hand-two-fingers" viewBox="0 0 24 24">
+      <path d="M8 13v-8.5a1.5 1.5 0 0 1 3 0v7.5M17 11.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-1.792a6 6 0 0 1 -5.012 -2.7l-.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47M14 10.5a1.5 1.5 0 0 1 3 0v1.5M11 5.5v-2a1.5 1.5 0 1 1 3 0v8.5"/>
+    </symbol>
+    <symbol id="icon-hand-finger" viewBox="0 0 24 24">
+      <path d="M8 13v-8.5a1.5 1.5 0 0 1 3 0v7.5M11 11.5v-2a1.5 1.5 0 1 1 3 0v2.5M14 10.5a1.5 1.5 0 0 1 3 0v1.5M17 11.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-1.792a6 6 0 0 1 -5.012 -2.7l-.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/>
+    </symbol>
   </svg>
   <!-- Language Toggle Switcher -->
   <div class="lang-toggle-container" hidden>
-    <button id="btn-lang-zh" class="lang-btn active">中</button>
+    <button id="btn-lang-zh" class="lang-btn">中</button>
     <span class="lang-separator">/</span>
     <button id="btn-lang-en" class="lang-btn">EN</button>
   </div>
 
   <div class="container">
     <header>
-      <h1 class="lang-zh">KIRI Maker 使用指南</h1>
+      <h1 class="lang-zh">KIRI Maker 自定义特效运镜工具</h1>
       <h1 class="lang-en">KIRI Maker User Guide</h1>
-      <p class="subtitle lang-zh">3DGS、粒子特效与电影运镜工具</p>
-      <p class="subtitle lang-en">3DGS, Particle Effects & Cinematic Camera Paths</p>
+      <p class="subtitle lang-zh">用户操作与使用指南</p>
+      <p class="subtitle lang-en">User Operations & Guidelines Manual</p>
     </header>
 
     <!-- 1. 加载模型 / Loading Models -->
     <div class="card">
-      <h2 class="lang-zh"><svg class="tabler-icon heading-icon" aria-hidden="true"><use href="#ti-folder"></use></svg>1. 快速入门：加载 3D 模型</h2>
-      <h2 class="lang-en"><svg class="tabler-icon heading-icon" aria-hidden="true"><use href="#ti-folder"></use></svg>1. Quick Start: Loading 3D Models</h2>
+      <h2 class="lang-zh"><svg class="ui-icon" aria-hidden="true"><use href="#icon-folder-open"></use></svg> 1. 快速入门：加载 3D 模型</h2>
+      <h2 class="lang-en"><svg class="ui-icon" aria-hidden="true"><use href="#icon-folder-open"></use></svg> 1. Quick Start: Loading 3D Models</h2>
       
-      <p class="lang-zh">KIRI Maker 支持解析公开的 KIRI Engine、Polycam 与 Luma 分享链接，并加载其中可用的 PLY、Splat 或点云资源：</p>
-      <p class="lang-en">KIRI Maker resolves public KIRI Engine, Polycam, and Luma share links and loads the best available PLY, Splat, or point-cloud asset:</p>
+      <p class="lang-zh">系统支持从网络分享链接直接解析并展示 3D 照片模型：</p>
+      <p class="lang-en">The system fetches and renders 3DGS Gaussian splats and particle models directly from supported public share URLs:</p>
       
       <ol class="lang-zh">
-        <li><strong>通过分享链接加载</strong>：在首页输入框粘贴公开分享地址，然后点击 <strong>Load</strong>。模型加载后也可以使用顶部工具栏的输入框加载其他地址。</li>
-        <li><strong>随机示例模型</strong>：点击 Load 左侧的骰子图标，可从 4 个内置 KIRI Engine 示例中随机选择并立即加载一个模型。</li>
-        <li><strong>格式与权限</strong>：Luma 的压缩 PLY 会在浏览器中自动解压。分享内容必须公开，并且需要包含受支持的 PLY 或 Splat 资源；私有、已删除或仅有 Mesh 的模型无法加载。</li>
+        <li><strong>通过分享链接加载</strong>：在首页中央的输入框（或者在模型加载后的顶部菜单栏）粘贴 Kiri Engine、Polycam、Luma 或 Insta360 分享地址，然后点击「<strong>加载</strong>」按钮。系统会自动解析并加载 PLY、Splat 或 SOG 模型。</li>
       </ol>
       <ol class="lang-en">
-        <li><strong>Load via Share Link</strong>: Paste a public share URL into the landing-page input, then select <strong>Load</strong>. After a model loads, you can use the top toolbar input to open another URL.</li>
-        <li><strong>Random Sample</strong>: Select the dice icon to the left of Load to choose and immediately load one of four built-in KIRI Engine examples.</li>
-        <li><strong>Formats and Access</strong>: Compressed Luma PLY files are unpacked automatically in the browser. The capture must be public and contain a supported PLY or Splat asset; private, removed, and mesh-only captures cannot be loaded.</li>
+        <li><strong>Load via Share Link</strong>: Paste a Kiri Engine, Polycam, Luma, or Insta360 share URL in the centered input box (or in the top toolbar after loading), then click the <strong>Load</strong> button. The system automatically fetches, parses, and loads PLY, Splat, or SOG model data.</li>
       </ol>
     </div>
 
     <!-- 2. 基础操控 / Basic Operations -->
     <div class="card">
-      <h2 class="lang-zh"><svg class="tabler-icon heading-icon" aria-hidden="true"><use href="#ti-mouse"></use></svg>2. 基础操作：场景视角与常规调节</h2>
-      <h2 class="lang-en"><svg class="tabler-icon heading-icon" aria-hidden="true"><use href="#ti-mouse"></use></svg>2. Basic Operations: Viewport & Adjustments</h2>
+      <h2 class="lang-zh"><svg class="ui-icon" aria-hidden="true"><use href="#icon-mouse"></use></svg> 2. 基础操作：场景视角与常规调节</h2>
+      <h2 class="lang-en"><svg class="ui-icon" aria-hidden="true"><use href="#icon-mouse"></use></svg> 2. Basic Operations: Viewport & Adjustments</h2>
       
       <ul class="lang-zh">
         <li><strong>视角旋转</strong>：在 3D 画布区域，按住 <strong>鼠标左键</strong> 并拖拽。</li>
         <li><strong>视角平移</strong>：按住 <strong>鼠标右键</strong> 并拖拽。</li>
-        <li><strong>场景缩放</strong>：滚动鼠标滚轮；触控设备可使用双指缩放和移动。</li>
-        <li><strong>模型方向</strong>：桌面版左下角的 <strong>Flip Vertically</strong> 可将当前模型垂直翻转；KIRI Maker 也会根据 KIRI Engine、Polycam 和 Luma 来源应用默认方向校正。</li>
-        <li><strong>自动旋转</strong>：点击 <strong>Stop Rotation</strong> 可暂停模型自动旋转，再次点击 <strong>Resume Rotation</strong> 恢复。暂停状态在预览和切换渲染模式时仍会保留。</li>
-        <li><strong>切换渲染模式</strong>：
+        <li><strong>场景缩放</strong>：滚动 <strong>鼠标中键滚轮</strong>。系统支持极小距离缩放，可将视角拉得极近来观测模型微小细节。</li>
+        <li><strong>渲染模式切换</strong>：
           <ul>
-            <li><span class="badge badge-spark"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-sparkles"></use></svg>3D Reality</span>：使用高斯泼溅渲染模型的写实外观和环境内容。</li>
-            <li><span class="badge badge-cloud"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-atom"></use></svg>Particle Mode</span>：以发光粒子展示模型，并启用 Scatter / Gather 进度条和粒子特效。</li>
+            <li><span class="badge badge-spark"><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-sparkles"></use></svg>3D 实景</span>：照片级写实的高保真 3D 高斯着色画面。新导入模型默认关闭背景裁剪；可在「渲染设置 → 3DGS 设置」中开启并调整裁剪范围与形状，后续切换菜单时会保留设置。</li>
+            <li><span class="badge badge-cloud"><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-atom"></use></svg>粒子模式</span>：展现充满未来科技感的荧光圆点粒子状态。</li>
           </ul>
         </li>
       </ul>
       <ul class="lang-en">
         <li><strong>Rotate View</strong>: Press and hold the <strong>Left Mouse Button</strong> and drag on the 3D canvas area.</li>
         <li><strong>Pan View</strong>: Press and hold the <strong>Right Mouse Button</strong> and drag.</li>
-        <li><strong>Zoom</strong>: Scroll the mouse wheel. On touch devices, use two fingers to zoom and move the view.</li>
-        <li><strong>Model Orientation</strong>: On desktop, use <strong>Flip Vertically</strong> in the lower-left panel to invert the current model. KIRI Maker also applies source-aware default orientation for KIRI Engine, Polycam, and Luma captures.</li>
-        <li><strong>Automatic Rotation</strong>: Select <strong>Stop Rotation</strong> to pause automatic model rotation and <strong>Resume Rotation</strong> to restore it. The paused state is preserved while previewing and switching render modes.</li>
-        <li><strong>Switch Render Modes</strong>:
+        <li><strong>Zooming</strong>: Scroll the <strong>Middle Mouse Wheel</strong>. The system supports micro-distance zooming, allowing you to get extremely close to observe fine details of the model.</li>
+        <li><strong>Initial Auto-Fit Zoom</strong>: When a model loads, regardless of the background filter radius, the default camera will <strong>accurately align and fit to a 1x radius distance of the model's centroid</strong>, placing the subject directly in the center at close range.</li>
+        <li><strong>Toggle Render Mode & Clipping Rules</strong>:
           <ul>
-            <li><span class="badge badge-spark"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-sparkles"></use></svg>3D Reality</span>: Uses Gaussian Splatting to render the model's realistic appearance and environment.</li>
-            <li><span class="badge badge-cloud"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-atom"></use></svg>Particle Mode</span>: Displays the model as glowing particles and enables the Scatter / Gather control and particle effects.</li>
+            <li><span class="badge badge-spark"><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-sparkles"></use></svg>3D Reality Mode</span>: Photorealistic high-fidelity 3D Gaussian Splatting rendering. Background cropping is off for each newly imported model. Open <strong>Rendering Settings → 3DGS Settings</strong> to enable it and adjust its bounds or shape; the setting is then preserved while navigating between menus.</li>
+            <li><span class="badge badge-cloud"><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-atom"></use></svg>Particle Mode</span>: Renders glowing holographic-style floating particles. Its independent background crop can hide environmental noise without changing the 3DGS crop.</li>
           </ul>
         </li>
       </ul>
     </div>
 
-    <!-- 3. 渲染设置 / Rendering Settings -->
+    <!-- 3. 运镜录制 / Camera Path Recording -->
     <div class="card">
-      <h2 class="lang-zh"><svg class="tabler-icon heading-icon" aria-hidden="true"><use href="#ti-settings"></use></svg>3. 渲染设置与粒子效果</h2>
-      <h2 class="lang-en"><svg class="tabler-icon heading-icon" aria-hidden="true"><use href="#ti-settings"></use></svg>3. Rendering Settings & Particle Effects</h2>
-
-      <p class="lang-zh">加载模型后，点击顶部 <strong class="icon-label"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-settings"></use></svg>Settings</strong> 打开渲染设置：</p>
-      <p class="lang-en">After loading a model, select <strong class="icon-label"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-settings"></use></svg>Settings</strong> in the top toolbar to open the rendering controls:</p>
-
-      <ul class="lang-zh">
-        <li><strong>Filter Background (Crop)</strong>：调整主体周围保留的点云范围，范围为 0.5x–3.0x；3.0x 表示关闭裁剪。更改后会重新处理当前粒子模型。</li>
-        <li><strong>Particle Size / Brightness / Density</strong>：分别控制粒子大小、发光亮度与显示密度。移动端可通过 Crop、Size、Light、Density 标签切换参数。</li>
-        <li><strong>Scatter Effect</strong>：可从 9 种粒子分散与重组效果中选择，也可以选择 <strong>No particle effects</strong>。</li>
-        <li><strong>Scatter / Gather</strong>：Particle Mode 下可拖动右下方进度条手动控制分散程度，或点击播放按钮自动执行 0% → 100% → 0% 动画。</li>
-      </ul>
-      <ul class="lang-en">
-        <li><strong>Filter Background (Crop)</strong>: Adjust the retained point-cloud area around the subject from 0.5x to 3.0x; 3.0x disables cropping. Changing this value reprocesses the current particle model.</li>
-        <li><strong>Particle Size / Brightness / Density</strong>: Control particle size, glow intensity, and visible density. On mobile, switch between the Crop, Size, Light, and Density parameter tabs.</li>
-        <li><strong>Scatter Effect</strong>: Choose from 9 particle scatter and assembly effects, or select <strong>No particle effects</strong>.</li>
-        <li><strong>Scatter / Gather</strong>: In Particle Mode, drag the lower-right progress slider to control the effect manually, or select Play to run a 0% → 100% → 0% animation.</li>
-      </ul>
-    </div>
-
-    <!-- 4. 运镜录制 / Camera Path Recording -->
-    <div class="card">
-      <h2 class="lang-zh"><svg class="tabler-icon heading-icon" aria-hidden="true"><use href="#ti-video"></use></svg>4. 电影运镜、关键帧与视频导出</h2>
-      <h2 class="lang-en"><svg class="tabler-icon heading-icon" aria-hidden="true"><use href="#ti-video"></use></svg>4. Camera Paths, Keyframes & Video Export</h2>
+      <h2 class="lang-zh"><svg class="ui-icon" aria-hidden="true"><use href="#icon-video"></use></svg> 3. 电影级运镜录制与 19 套内置运镜预设</h2>
+      <h2 class="lang-en"><svg class="ui-icon" aria-hidden="true"><use href="#icon-video"></use></svg> 3. Cinematic Flight Path Recording & 19 Built-in Presets</h2>
       
-      <p class="lang-zh">调整到想要的初始视角，然后点击顶部 <strong class="icon-label"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-video"></use></svg>Camera Path</strong>。当前视角会作为内置运镜的第一帧：</p>
-      <p class="lang-en">Set the desired starting view, then select <strong class="icon-label"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-video"></use></svg>Camera Path</strong> in the top toolbar. The current view becomes the first frame of a built-in path:</p>
+      <p class="lang-zh">点击顶部的 <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-video"></use></svg>镜头运镜</strong> 开启运镜控制台，制作属于您的电影级运镜视频：</p>
+      <p class="lang-en">Click the <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-video"></use></svg>Camera Path</strong> button at the top to open the flight path console and record your own aerial tracking videos:</p>
       
       <div class="tip-box lang-zh" style="background: rgba(123, 44, 191, 0.03); border-left: 4px solid var(--secondary-color);">
-        <h3 style="color: var(--secondary-color);"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-rocket"></use></svg>16 套内置电影运镜</h3>
-        <p>预设包括水平环绕、垂直环绕、8 字形、螺旋、Dolly Zoom、蝴蝶、钟摆、心形、Inception Push & Roll 等。轨迹会根据进入运镜模式时的相机距离、角度和目标位置生成。</p>
+        <h3 style="color: var(--secondary-color);"><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-rocket"></use></svg>新增：19 套复合型运镜</h3>
+        <p>我们内置了 19 套高级运镜预设（包含希区柯克滑动变焦、8 字形无限循环、空间纵深进入、横向平移扫景与朝外环绕等）。这些预设轨迹<strong>完全基于您当前的缩放大小与仰角</strong>动态计算。</p>
       </div>
       <div class="tip-box lang-en" style="background: rgba(123, 44, 191, 0.03); border-left: 4px solid var(--secondary-color);">
-        <h3 style="color: var(--secondary-color);"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-rocket"></use></svg>16 Built-in Cinematic Paths</h3>
-        <p>Presets include horizontal and vertical orbits, Figure-8, spiral, Dolly Zoom, butterfly, pendulum, heart, and Inception Push & Roll. Paths are generated from the camera distance, angle, and target captured when camera-path mode opens.</p>
+        <h3 style="color: var(--secondary-color);"><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-rocket"></use></svg>New: 19 Built-in Camera Paths</h3>
+        <p>We have integrated 19 advanced camera presets, including Hitchcock Dolly Zoom, Figure-8 loops, spatial depth entry, lateral scene sweeps, and outward-facing spatial orbits. These trajectories are dynamically calculated <strong>from the current zoom and pitch</strong>.</p>
       </div>
 
+      <p class="lang-zh"><strong>星际穿越流星汇聚</strong>粒子特效可与「空间纵深缓慢进入」组合使用：模型从远处光点完整靠近，前景星粒子按运镜时长汇聚，并在导出时保持一致的色彩与速度。</p>
+      <p class="lang-en">Pair <strong>Interstellar Warp Meteor Assembly</strong> with Spatial Depth Entry for a coherent model approach, duration-aware foreground stars, and matching color and timing in exported video.</p>
+
       <ol class="lang-zh">
-        <li><strong>内置预设</strong>：从 <strong>Flight Path Preset</strong> 选择任意预设，再选择 Scatter Effect（可选），点击 <strong class="icon-label"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-player-play"></use></svg>Preview</strong> 预览。</li>
-        <li><strong>自定义关键帧</strong>：选择 <em>-- Custom Keyframes - Please Select --</em>，依次调整视角并点击 <strong class="icon-label"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-plus"></use></svg>Add Keyframe</strong>。关键帧数量不设上限，路径至少需要 2 个关键帧；点击“视角”标签可恢复保存的相机位置和观察目标，也可单独删除或使用 Clear 清空。</li>
-        <li><strong>预览控制</strong>：预览时可以切换 Particle Mode / 3D Reality、停止预览，或直接从预览控制栏开始导出；渲染切换与粒子效果会进入最终序列。</li>
-        <li><strong>导出视频</strong>：点击 <strong class="icon-label"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-video"></use></svg>Export Video</strong> 生成 1080p、目标 60 FPS 的视频。优先导出 MP4，不支持时使用浏览器可用的兼容格式；导出期间可停止录制或停止合成。</li>
+        <li><strong>使用内置运镜预设</strong>：在<strong>运镜预设</strong>下拉菜单中选择一套内置运镜（如希区柯克变焦），点击 <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-player-play"></use></svg>预览</strong>即可开始预览。<strong>在预览运行期间，网页会自动锁定页面缩放防止误触</strong>。</li>
+        <li><strong>自定义记录关键帧</strong>：选择<strong>自定义关键帧</strong>模式，调整视角后点击 <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-plus"></use></svg>添加关键帧</strong>记录不限数量的视角。点击任意视角卡片可恢复其相机位置和观察目标，再点击 <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-player-play"></use></svg>预览</strong>即可沿轨迹平滑运镜。</li>
+        <li><strong>每秒 60 帧导出视频</strong>：无论选择预设还是自定义路径，点击 <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-movie"></use></svg>导出视频</strong>都会自动启用 1080p 渲染并生成每秒 60 帧的 MP4 视频，完成后即可保存。</li>
       </ol>
       <ol class="lang-en">
-        <li><strong>Built-in Presets</strong>: Choose any <strong>Flight Path Preset</strong>, optionally select a Scatter Effect, and select <strong class="icon-label"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-player-play"></use></svg>Preview</strong>.</li>
-        <li><strong>Custom Keyframes</strong>: Choose <em>-- Custom Keyframes - Please Select --</em>, adjust the view, and select <strong class="icon-label"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-plus"></use></svg>Add Keyframe</strong> for each view. There is no keyframe limit, and a path requires at least 2 keyframes. Select a Viewpoint label to restore its saved camera position and target; remove frames individually or use Clear to remove all.</li>
-        <li><strong>Preview Controls</strong>: During preview, switch between Particle Mode and 3D Reality, stop the preview, or start exporting from the preview controls. Renderer changes and particle-effect timing are included in the final sequence.</li>
-        <li><strong>Video Export</strong>: Select <strong class="icon-label"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-video"></use></svg>Export Video</strong> for 1080p output targeting 60 FPS. MP4 is preferred, with a browser-supported fallback when necessary; recording or frame composition can be stopped while export is running.</li>
+        <li><strong>Built-in Presets</strong>: Select a flight path preset from the <strong>Flight Path Preset</strong> dropdown (e.g., <em>Hitchcock Dolly Zoom</em>), then click <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-player-play"></use></svg>Preview</strong> to begin. <strong>During the preview, page zoom controls are locked to avoid misclicks</strong>.</li>
+        <li><strong>Custom Keyframes</strong>: Under the <em>None (Custom Keyframes)</em> mode, add as many viewpoints as needed. Click an entire viewpoint card to restore its saved camera position and target, then click <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-player-play"></use></svg>Preview</strong> to fly smoothly along the custom path.</li>
+        <li><strong>60FPS Video Export</strong>: Click <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-movie"></use></svg>Export 1080p MP4</strong> under any mode. The system triggers offscreen 1080p WebGL rendering with a decoupled virtual timestamp step. Regardless of GPU lag, the exported MP4/WebM video is guaranteed to have a constant 60 FPS playback rate and will download automatically.</li>
       </ol>
     </div>
 
-    <!-- 5. 手势控制 / Gesture Control -->
+    <!-- 4. 手势控制 / Gesture Control -->
     <div class="card">
-      <h2 class="lang-zh"><svg class="tabler-icon heading-icon" aria-hidden="true"><use href="#ti-hand-stop"></use></svg>5. AI 手势控制</h2>
-      <h2 class="lang-en"><svg class="tabler-icon heading-icon" aria-hidden="true"><use href="#ti-hand-stop"></use></svg>5. AI Gesture Controls</h2>
+      <h2 class="lang-zh"><svg class="ui-icon" aria-hidden="true"><use href="#icon-hand-stop"></use></svg> 4. 核心体验：智能手势追踪</h2>
+      <h2 class="lang-en"><svg class="ui-icon" aria-hidden="true"><use href="#icon-hand-stop"></use></svg> 4. Core Experience: Intelligent AI Gesture Tracking</h2>
       
-      <p class="lang-zh">点击工具栏的 <strong class="icon-label"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-hand-stop"></use></svg>Gesture</strong> 按钮授权摄像头。开启后，在摄像头前展示特定手势即可控制场景：</p>
-      <p class="lang-en">Click the <strong class="icon-label"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-hand-stop"></use></svg>Gesture</strong> button in the toolbar to grant camera access. Once enabled, display specific gestures in front of the camera to control the scene:</p>
+      <p class="lang-zh">点击工具栏的 <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-hand-stop"></use></svg>手势控制</strong>按钮并授权摄像头。开启后，在摄像头前展示特定手势即可控制场景：</p>
+      <p class="lang-en">Click the <strong><svg class="ui-icon inline-icon" aria-hidden="true"><use href="#icon-hand-stop"></use></svg>Gesture</strong> button in the toolbar to grant camera access. Once enabled, display specific gestures in front of the camera to control the scene:</p>
       
       <div class="tip-box lang-zh">
-        <h3><svg class="tabler-icon" aria-hidden="true"><use href="#ti-bulb"></use></svg>识别小贴士</h3>
+        <h3><svg class="ui-icon" aria-hidden="true"><use href="#icon-bulb"></use></svg>识别小贴士</h3>
         <p>请保持手部光线充足并距摄像头 0.5 ~ 1.5 米。系统内置 8 帧防抖动缓冲和低通指数平滑滤波，动作表现非常柔和线性，不用担心手发抖导致画面乱颤。</p>
       </div>
       <div class="tip-box lang-en">
-        <h3><svg class="tabler-icon" aria-hidden="true"><use href="#ti-bulb"></use></svg>Detection Tips</h3>
+        <h3><svg class="ui-icon" aria-hidden="true"><use href="#icon-bulb"></use></svg>Detection Tips</h3>
         <p>Please ensure adequate lighting and maintain a distance of 0.5 to 1.5 meters from the camera. The system features an 8-frame anti-shake buffer and low-pass exponential smoothing filters for smooth, linear motion feedback.</p>
       </div>
 
       <table>
         <thead>
           <tr class="lang-zh">
-            <th class="gesture-icon-col">手势</th>
+            <th class="icon-col">手势</th>
             <th style="width: 150px;">动作名称</th>
             <th>交互效果</th>
           </tr>
           <tr class="lang-en">
-            <th class="gesture-icon-col">Gesture</th>
+            <th class="icon-col">Gesture</th>
             <th style="width: 150px;">Name</th>
             <th>Interaction</th>
           </tr>
@@ -481,40 +469,40 @@
         <tbody>
           <!-- Palm -->
           <tr>
-            <td class="gesture-icon-col"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-hand-stop"></use></svg></td>
-            <td class="gesture-name lang-zh">张开手掌 (Open Palm)</td>
+            <td class="icon-col"><svg class="ui-icon" aria-hidden="true"><use href="#icon-hand-stop"></use></svg></td>
+            <td class="gesture-name lang-zh">张开手掌</td>
             <td class="gesture-name lang-en">Open Palm</td>
-            <td class="lang-zh"><strong>粒子散开消散</strong>：在 Particle Mode 下，模型粒子会根据手掌张开程度向四周扩散。</td>
+            <td class="lang-zh"><strong>粒子散开消散</strong>：在粒子模式下，模型粒子将根据您的手指张开幅度向四周扩散消散。</td>
             <td class="lang-en"><strong>Particle Dispersal</strong>: In Particle Mode, particles scatter outwards based on how wide you open your palm.</td>
           </tr>
           <!-- Fist -->
           <tr>
-            <td class="gesture-icon-col"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-hand-grab"></use></svg></td>
-            <td class="gesture-name lang-zh">攥拳头 (Closed Fist)</td>
+            <td class="icon-col"><svg class="ui-icon" aria-hidden="true"><use href="#icon-hand-grab"></use></svg></td>
+            <td class="gesture-name lang-zh">攥拳头</td>
             <td class="gesture-name lang-en">Closed Fist</td>
-            <td class="lang-zh"><strong>粒子聚拢收缩</strong>：在 Particle Mode 下，已散开的粒子会向中心收缩并恢复模型。</td>
-            <td class="lang-en"><strong>Particle Assembly</strong>: In Particle Mode, scattered particles gather back toward the center to restore the model.</td>
+            <td class="lang-zh"><strong>粒子聚拢收缩</strong>：在粒子模式下，已散开的粒子会向中心收缩，拼回原本的密集模型。</td>
+            <td class="lang-en"><strong>Particle Assembly</strong>: In Particle Mode, scattered particles gather back towards the center to restore the dense model.</td>
           </tr>
           <!-- Victory -->
           <tr>
-            <td class="gesture-icon-col"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-hand-two-fingers"></use></svg></td>
-            <td class="gesture-name lang-zh">剪刀手 (Victory)</td>
+            <td class="icon-col"><svg class="ui-icon" aria-hidden="true"><use href="#icon-hand-two-fingers"></use></svg></td>
+            <td class="gesture-name lang-zh">剪刀手</td>
             <td class="gesture-name lang-en">Victory</td>
-            <td class="lang-zh"><strong>切换渲染模式</strong>：在摄像头前比出该手势并保持约 <strong>0.7 秒</strong>，即可在 3D Reality 与 Particle Mode 之间切换。</td>
-            <td class="lang-en"><strong>Toggle Render Mode</strong>: Hold the Victory sign for about <strong>0.7 seconds</strong> to switch between 3D Reality and Particle Mode.</td>
+            <td class="lang-zh"><strong>切换渲染模式</strong>：在摄像头前比出该手势并<strong>保持超过 0.7 秒</strong>可触发切换。会在 3D 实景与粒子模式之间进行切换。</td>
+            <td class="lang-en"><strong>Toggle Render Mode</strong>: Strike the Victory sign and <strong>hold it for over 0.7 seconds</strong> to toggle rendering between 3D Reality and Particle Mode.</td>
           </tr>
           <!-- Two Fists Zoom -->
           <tr>
-            <td class="gesture-icon-col"><span class="gesture-icon-pair" aria-hidden="true"><svg class="tabler-icon"><use href="#ti-hand-grab"></use></svg><svg class="tabler-icon"><use href="#ti-hand-grab"></use></svg></span></td>
-            <td class="gesture-name lang-zh">双手攥拳 (Two Fists)</td>
+            <td class="icon-col"><span class="icon-pair" aria-hidden="true"><svg class="ui-icon"><use href="#icon-hand-grab"></use></svg><svg class="ui-icon"><use href="#icon-hand-grab"></use></svg></span></td>
+            <td class="gesture-name lang-zh">双手攥拳</td>
             <td class="gesture-name lang-en">Two Fists</td>
-            <td class="lang-zh"><strong>双手距离缩放</strong>：同时展示两只手的攥拳状态。当两拳距离靠近或拉远时，可以无极调整 3D 模型的物理尺寸大小。</td>
+            <td class="lang-zh"><strong>双手距离缩放</strong>：同时展示两只手的攥拳状态。当两拳距离靠近或拉远时，可以无级调整 3D 模型的物理尺寸大小。</td>
             <td class="lang-en"><strong>Two-Hand Distance Zoom</strong>: Present two closed fists. Bring your fists closer or further apart to dynamically scale the 3D model size.</td>
           </tr>
           <!-- Pointing Up -->
           <tr>
-            <td class="gesture-icon-col"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-hand-finger"></use></svg></td>
-            <td class="gesture-name lang-zh">食指指向 (Pointing Up)</td>
+            <td class="icon-col"><svg class="ui-icon" aria-hidden="true"><use href="#icon-hand-finger"></use></svg></td>
+            <td class="gesture-name lang-zh">食指指向</td>
             <td class="gesture-name lang-en">Pointing Up</td>
             <td class="lang-zh"><strong>遥控相机视角</strong>：比出单指指向上方后，在空中移手，相机会精确跟踪您的食指指尖轨迹进行平滑视角旋转。</td>
             <td class="lang-en"><strong>Remote Camera Rotation</strong>: Show a pointing finger and move your hand. The camera will smoothly follow the trajectory of your index finger tip.</td>
@@ -552,7 +540,7 @@
     btnZh.addEventListener('click', () => setLanguage('zh'));
     btnEn.addEventListener('click', () => setLanguage('en'));
     
-    // English remains the default while the language switcher is hidden.
+    // English is the default while the language switcher is hidden.
     setLanguage('en');
   </script>
 </body>

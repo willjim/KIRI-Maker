@@ -4,8 +4,6 @@
  */
 
 const SHARE_SOURCES = new Map([
-  ['www.remy3d.cn', 'legacy'],
-  ['remy3d.cn', 'legacy'],
   ['www.kiriengine.app', 'kiri'],
   ['kiriengine.app', 'kiri'],
   ['www.kiriengine.com', 'kiri'],
@@ -13,7 +11,8 @@ const SHARE_SOURCES = new Map([
   ['poly.cam', 'polycam'],
   ['www.poly.cam', 'polycam'],
   ['lumalabs.ai', 'luma'],
-  ['www.lumalabs.ai', 'luma']
+  ['www.lumalabs.ai', 'luma'],
+  ['app.insta360.com', 'insta360']
 ]);
 
 const POLYCAM_PUBLIC_DATABASE = 'https://polycam-a4a1e.firebaseio.com';
@@ -49,19 +48,23 @@ export async function onRequestGet({ request }) {
     } else {
       const validPath = source === 'luma'
         ? shareUrl.pathname.startsWith('/capture/')
-        : source === 'kiri'
-          ? shareUrl.pathname.startsWith('/share/')
-          : shareUrl.pathname.startsWith('/model/') || shareUrl.pathname.startsWith('/share/');
+        : source === 'insta360'
+          ? shareUrl.pathname.startsWith('/3dspace/detail/')
+          : shareUrl.pathname.startsWith('/share/');
       if (!validPath) return textResponse('Unsupported share URL path', 403);
 
-      const upstream = await fetch(shareUrl.toString(), {
+      const upstreamUrl = new URL(shareUrl);
+      upstreamUrl.searchParams.set('_kirimaker_refresh', Date.now().toString());
+      const upstream = await fetch(upstreamUrl.toString(), {
         headers: {
           Accept: 'text/html,application/xhtml+xml',
-          Referer: source === 'kiri'
-            ? 'https://www.kiriengine.app/'
-            : source === 'luma'
-              ? 'https://lumalabs.ai/'
-              : 'https://www.remy3d.cn/',
+          'Cache-Control': 'no-cache, no-store, max-age=0',
+          Pragma: 'no-cache',
+          Referer: source === 'luma'
+            ? 'https://lumalabs.ai/'
+            : source === 'insta360'
+              ? 'https://app.insta360.com/'
+              : 'https://www.kiriengine.app/',
           'User-Agent': 'Mozilla/5.0 AppleWebKit/537.36 Chrome/120 Safari/537.36'
         },
         redirect: 'follow'
@@ -74,7 +77,9 @@ export async function onRequestGet({ request }) {
       const html = await upstream.text();
       result = source === 'luma'
         ? parseLumaSharePage(html)
-        : parseNuxtSharePage(html, source === 'kiri');
+        : source === 'insta360'
+          ? parseInsta360SharePage(html)
+          : parseNuxtSharePage(html);
     }
 
     return jsonResponse(result);
@@ -83,11 +88,50 @@ export async function onRequestGet({ request }) {
   }
 }
 
+export function parseInsta360SharePage(html) {
+  const match = html.match(/id=["']__NEXT_DATA__["'][^>]*>([\s\S]*?)<\/script>/);
+  if (!match) throw new Error('Page does not contain Insta360 model data');
+
+  const nextData = JSON.parse(match[1]);
+  const taskDetail = nextData?.props?.pageProps?.taskDetail;
+  const outputs = taskDetail?.outputs;
+  if (!Array.isArray(outputs)) throw new Error('Insta360 task does not contain model outputs');
+
+  let sogUrl = null;
+  let splatUrl = null;
+  let plyUrl = null;
+  let camerasUrl = null;
+  for (const output of outputs) {
+    if (!output || typeof output.url !== 'string' || !output.url.startsWith('https://')) continue;
+    const format = String(output.fileFormat || '').toLowerCase();
+    const type = String(output.type || '').toLowerCase();
+    if (type === 'model' && format === 'sog') sogUrl = output.url;
+    if (type === 'model' && format === 'splat') splatUrl = output.url;
+    if (type === 'model' && format === 'ply') plyUrl = output.url;
+    if (format === 'json' && /cameras\.json(?:\?|$)/i.test(output.url)) camerasUrl = output.url;
+  }
+
+  if (!sogUrl && !splatUrl && !plyUrl) {
+    throw new Error('No supported SOG, Splat, or PLY asset found');
+  }
+  return {
+    name: typeof taskDetail.title === 'string' && taskDetail.title.trim()
+      ? taskDetail.title.trim()
+      : 'Insta360 Model',
+    source: 'insta360',
+    sogUrl,
+    splatUrl,
+    plyUrl,
+    pcdUrl: null,
+    camerasUrl,
+  };
+}
+
 export async function onRequestOptions() {
   return new Response(null, { status: 204, headers: corsHeaders });
 }
 
-export function parseNuxtSharePage(html, isKiri) {
+export function parseNuxtSharePage(html) {
   const match = html.match(/id="__NUXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
   if (!match) throw new Error('Page does not contain Nuxt model data');
 
@@ -112,13 +156,13 @@ export function parseNuxtSharePage(html, isKiri) {
   }
 
   if (!splatUrl && !plyUrl) {
-    if (isKiri && unsupportedMeshUrl) throw new Error('This KIRI Engine share is a Mesh model, not 3DGS');
+    if (unsupportedMeshUrl) throw new Error('This KIRI Engine share is a Mesh model, not 3DGS');
     throw new Error('No supported Splat or PLY asset found');
   }
 
   return {
-    source: isKiri ? 'kiri' : 'legacy',
-    name: findModelName(data, isKiri ? 'KIRI Engine Model' : '3D Model'),
+    source: 'kiri',
+    name: findModelName(data, 'KIRI Engine Model'),
     splatUrl,
     plyUrl,
     pcdUrl,

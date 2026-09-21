@@ -3,10 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#06060f">
+  <script>
+    if (/MicroMessenger/i.test(navigator.userAgent || '')) {
+      document.documentElement.classList.add('wechat-browser');
+    }
+  </script>
+  <style>
+    html,
+    body {
+      margin: 0;
+      background: #06060f;
+    }
+  </style>
   <title>KIRI Maker Custom Effects & Camera Tool</title>
-  <meta name="description" content="Three.js particle visualization with MediaPipe hand gesture control. Load PLY models from Kiri Engine, Polycam, and Luma share links.">
+  <meta name="description" content="Load Kiri Engine, Polycam, Luma, and Insta360 3DGS models for particle effects, crop and eraser editing, gesture control, and custom camera paths.">
   <!-- Styles -->
-  <link rel="stylesheet" href="css/style.css?v=3.37">
+  <link rel="stylesheet" href="css/style.css?v=3.52">
   <!-- Three.js Import Map -->
   <script type="importmap">
   {
@@ -14,7 +28,6 @@
       "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
       "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
       "@sparkjsdev/spark": "https://sparkjs.dev/releases/spark/2.1.0/spark.module.js",
-      "fflate": "https://cdn.jsdelivr.net/npm/fflate@0.8.2/+esm",
       "fix-webm-duration": "https://cdn.jsdelivr.net/npm/@fix-webm-duration/fix/+esm",
       "mediabunny": "https://cdn.jsdelivr.net/npm/mediabunny@1.50.8/+esm"
     }
@@ -24,33 +37,73 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 </head>
 <body class="landing-mode">
-  <svg class="tabler-sprite" aria-hidden="true">
-    <symbol id="ti-arrow-right" viewBox="0 0 24 24"><path d="M5 12l14 0"/><path d="M13 18l6 -6"/><path d="M13 6l6 6"/></symbol>
-    <symbol id="ti-upload" viewBox="0 0 24 24"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 9l5 -5l5 5"/><path d="M12 4l0 12"/></symbol>
-    <symbol id="ti-sparkles" viewBox="0 0 24 24"><path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6"/></symbol>
-    <symbol id="ti-atom" viewBox="0 0 24 24"><path d="M12 12v.01"/><path d="M19.071 4.929c-1.562 -1.562 -6 .337 -9.9 4.243c-3.905 3.905 -5.804 8.337 -4.242 9.9c1.562 1.561 6 -.338 9.9 -4.244c3.905 -3.905 5.804 -8.337 4.242 -9.9"/><path d="M4.929 4.929c-1.562 1.562 .337 6 4.243 9.9c3.905 3.905 8.337 5.804 9.9 4.242c1.561 -1.562 -.338 -6 -4.244 -9.9c-3.905 -3.905 -8.337 -5.804 -9.9 -4.242"/></symbol>
-    <symbol id="ti-video" viewBox="0 0 24 24"><path d="M15 10l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -1.447 .894l-4.553 -2.276v-4"/><path d="M3 8a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2l0 -8"/></symbol>
-    <symbol id="ti-settings" viewBox="0 0 24 24"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/></symbol>
-    <symbol id="ti-hand-stop" viewBox="0 0 24 24"><path d="M8 13v-7.5a1.5 1.5 0 0 1 3 0v6.5"/><path d="M11 5.5v-2a1.5 1.5 0 1 1 3 0v8.5"/><path d="M14 5.5a1.5 1.5 0 0 1 3 0v6.5"/><path d="M17 7.5a1.5 1.5 0 0 1 3 0v8.5a6 6 0 0 1 -6 6h-2h.208a6 6 0 0 1 -5.012 -2.7a69.74 69.74 0 0 1 -.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/></symbol>
-    <symbol id="ti-hand-grab" viewBox="0 0 24 24"><path d="M8 11v-3.5a1.5 1.5 0 0 1 3 0v2.5"/><path d="M11 9.5v-3a1.5 1.5 0 0 1 3 0v3.5"/><path d="M14 7.5a1.5 1.5 0 0 1 3 0v2.5"/><path d="M17 9.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-2h.208a6 6 0 0 1 -5.012 -2.7l-.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/></symbol>
-    <symbol id="ti-hand-two-fingers" viewBox="0 0 24 24"><path d="M8 13v-8.5a1.5 1.5 0 0 1 3 0v7.5"/><path d="M17 11.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-2h.208a6 6 0 0 1 -5.012 -2.7a69.74 69.74 0 0 1 -.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/><path d="M14 10.5a1.5 1.5 0 0 1 3 0v1.5"/><path d="M11 5.5v-2a1.5 1.5 0 1 1 3 0v8.5"/></symbol>
-    <symbol id="ti-hand-finger" viewBox="0 0 24 24"><path d="M8 13v-8.5a1.5 1.5 0 0 1 3 0v7.5"/><path d="M11 11.5v-2a1.5 1.5 0 1 1 3 0v2.5"/><path d="M14 10.5a1.5 1.5 0 0 1 3 0v1.5"/><path d="M17 11.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-2h.208a6 6 0 0 1 -5.012 -2.7a69.74 69.74 0 0 1 -.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/></symbol>
-    <symbol id="ti-book-2" viewBox="0 0 24 24"><path d="M19 4v16h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12"/><path d="M19 16h-12a2 2 0 0 0 -2 2"/><path d="M9 8h6"/></symbol>
-    <symbol id="ti-circle-check" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M9 12l2 2l4 -4"/></symbol>
-    <symbol id="ti-loader-2" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9"/></symbol>
-    <symbol id="ti-player-play" viewBox="0 0 24 24"><path d="M7 4v16l13 -8l-13 -8"/></symbol>
-    <symbol id="ti-dice-5" viewBox="0 0 24 24"><path d="M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14"/><path d="M7 7l.01 0"/><path d="M17 7l.01 0"/><path d="M7 17l.01 0"/><path d="M17 17l.01 0"/><path d="M12 12l.01 0"/></symbol>
-    <symbol id="ti-view-360-arrow" viewBox="0 0 24 24"><path d="M17 15.328c2.414 -.718 4 -1.94 4 -3.328c0 -2.21 -4.03 -4 -9 -4s-9 1.79 -9 4s4.03 4 9 4"/><path d="M9 13l3 3l-3 3"/></symbol>
-    <symbol id="ti-slash" viewBox="0 0 24 24"><path d="M5 5l14 14"/></symbol>
-    <symbol id="ti-brand-github" viewBox="0 0 24 24"><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3"/><path d="M15 21v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.7 -1.4 5.7 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.8 5.7 5.7 6c-.6 .6 -.6 1.2 -.5 2v3.5"/></symbol>
-    <symbol id="ti-x" viewBox="0 0 24 24"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></symbol>
+  <!-- Selected Tabler Icons, MIT License: https://github.com/tabler/tabler-icons/blob/main/LICENSE -->
+  <svg class="svg-icon-sprite" aria-hidden="true">
+    <symbol id="icon-sparkles" viewBox="0 0 24 24">
+      <path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6"/>
+    </symbol>
+    <symbol id="icon-video" viewBox="0 0 24 24">
+      <path d="M15 10l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -1.447 .894l-4.553 -2.276v-4"/>
+      <path d="M3 8a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2l0 -8"/>
+    </symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24">
+      <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065"/>
+      <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/>
+    </symbol>
+    <symbol id="icon-book" viewBox="0 0 24 24">
+      <path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/>
+      <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0"/>
+      <path d="M3 6l0 13M12 6l0 13M21 6l0 13"/>
+    </symbol>
+    <symbol id="icon-atom" viewBox="0 0 24 24">
+      <path d="M12 12v.01"/>
+      <path d="M19.071 4.929c-1.562 -1.562 -6 .337 -9.9 4.243c-3.905 3.905 -5.804 8.337 -4.242 9.9c1.562 1.561 6 -.338 9.9 -4.244c3.905 -3.905 5.804 -8.337 4.242 -9.9"/>
+      <path d="M4.929 4.929c-1.562 1.562 .337 6 4.243 9.9c3.905 3.905 8.337 5.804 9.9 4.242c1.561 -1.562 -.338 -6 -4.244 -9.9c-3.905 -3.905 -8.337 -5.804 -9.9 -4.242"/>
+    </symbol>
+    <symbol id="icon-hand-stop" viewBox="0 0 24 24">
+      <path d="M8 13v-7.5a1.5 1.5 0 0 1 3 0v6.5"/>
+      <path d="M11 5.5v-2a1.5 1.5 0 1 1 3 0v8.5"/>
+      <path d="M14 5.5a1.5 1.5 0 0 1 3 0v6.5"/>
+      <path d="M17 7.5a1.5 1.5 0 0 1 3 0v8.5a6 6 0 0 1 -6 6h-1.792a6 6 0 0 1 -5.012 -2.7l-.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/>
+    </symbol>
+    <symbol id="icon-hand-grab" viewBox="0 0 24 24">
+      <path d="M8 11v-3.5a1.5 1.5 0 0 1 3 0v2.5M11 9.5v-3a1.5 1.5 0 0 1 3 0v3.5M14 7.5a1.5 1.5 0 0 1 3 0v2.5"/>
+      <path d="M17 9.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-1.792a6 6 0 0 1 -5.012 -2.7l-.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/>
+    </symbol>
+    <symbol id="icon-hand-two-fingers" viewBox="0 0 24 24">
+      <path d="M8 13v-8.5a1.5 1.5 0 0 1 3 0v7.5M17 11.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-1.792a6 6 0 0 1 -5.012 -2.7l-.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47M14 10.5a1.5 1.5 0 0 1 3 0v1.5M11 5.5v-2a1.5 1.5 0 1 1 3 0v8.5"/>
+    </symbol>
+    <symbol id="icon-hand-finger" viewBox="0 0 24 24">
+      <path d="M8 13v-8.5a1.5 1.5 0 0 1 3 0v7.5M11 11.5v-2a1.5 1.5 0 1 1 3 0v2.5M14 10.5a1.5 1.5 0 0 1 3 0v1.5"/>
+      <path d="M17 11.5a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1 -6 6h-1.792a6 6 0 0 1 -5.012 -2.7l-.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/>
+    </symbol>
+    <symbol id="icon-loader" viewBox="0 0 24 24">
+      <path d="M12 3a9 9 0 1 0 9 9"/>
+    </symbol>
+    <symbol id="icon-circle-check" viewBox="0 0 24 24">
+      <path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/>
+      <path d="M9 12l2 2l4 -4"/>
+    </symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24">
+      <path d="M5 12l5 5l9 -9"/>
+    </symbol>
+    <symbol id="icon-restore" viewBox="0 0 24 24">
+      <path d="M4.05 11a8 8 0 1 1 2.05 5.35"/>
+      <path d="M4 4v7h7"/>
+    </symbol>
+    <symbol id="icon-eraser" viewBox="0 0 24 24">
+      <path d="M19 19h-11l-4 -4a2 2 0 0 1 0 -3l7 -7a2 2 0 0 1 3 0l5 5a2 2 0 0 1 0 3l-6 6"/>
+      <path d="M18 12.3l-6.3 -6.3"/>
+    </symbol>
+    <symbol id="icon-dice-5" viewBox="0 0 24 24">
+      <path d="M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14"/>
+      <path d="M7 7l.01 0M17 7l.01 0M7 17l.01 0M17 17l.01 0M12 12l.01 0"/>
+    </symbol>
   </svg>
-  <a class="github-corner-badge" href="https://github.com/willjim/KIRI-Maker" target="_blank" rel="noopener noreferrer" title="View KIRI Maker on GitHub" aria-label="View KIRI Maker on GitHub">
-    <svg class="tabler-icon" aria-hidden="true"><use href="#ti-brand-github"></use></svg>
-  </a>
   <div class="app-container no-select">
     <!-- Three.js Canvas -->
     <div id="canvas-container"></div>
+    <div id="splat-eraser-brush-cursor" class="splat-eraser-brush-cursor" aria-hidden="true"></div>
     <!-- ========== Toolbar ========== -->
     <div class="toolbar" id="toolbar">
       <!-- URL Input -->
@@ -59,64 +112,89 @@
           type="text"
           id="url-input"
           class="url-input"
-          placeholder="Paste a Kiri Engine, Polycam, or Luma share URL..."
+          placeholder="Paste a Kiri Engine, Polycam, Luma, or Insta360 share URL..."
           autocomplete="off"
           spellcheck="false"
         >
       </div>
       <!-- Load Button -->
       <button id="btn-load" class="btn btn-primary" title="Load model from URL">
-        <svg class="tabler-icon" aria-hidden="true"><use href="#ti-arrow-right"></use></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
         <span class="btn-text">Load</span>
       </button>
       <div class="toolbar-divider" id="toolbar-url-divider"></div>
       
       <!-- Upload Button (Hidden) -->
-      <button id="btn-upload" class="btn btn-secondary" title="Upload local PLY or Splat file" style="display: none;">
-        <svg class="tabler-icon" aria-hidden="true"><use href="#ti-upload"></use></svg>
+      <button id="btn-upload" class="btn btn-secondary" title="Upload local PLY, Splat, or SOG file" style="display: none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
         <span class="btn-text">Upload Model</span>
       </button>
       <!-- Hidden File Input -->
-      <input type="file" id="file-input" class="file-input-hidden" accept=".ply,.splat">
+      <input type="file" id="file-input" class="file-input-hidden" accept=".ply,.splat,.sog">
       <!-- 1. 点云模式 / Spark Mode Toggle -->
       <button id="btn-toggle-spark" class="btn btn-secondary" title="Toggle 3D Reality mode">
-        <span class="btn-icon-symbol"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-atom"></use></svg></span><span class="btn-text">3D Reality</span>
+        <svg class="ui-icon btn-icon" aria-hidden="true"><use href="#icon-sparkles"></use></svg><span class="btn-text">3D Reality</span>
       </button>
       <div class="toolbar-divider"></div>
 
       <!-- 2. 镜头运镜 / Camera Path Mode Toggle -->
       <button id="btn-camera-mode" class="btn btn-secondary" title="Open camera path export mode">
-        <span class="btn-icon-symbol"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-video"></use></svg></span><span class="btn-text">Camera Path</span>
+        <svg class="ui-icon btn-icon" aria-hidden="true"><use href="#icon-video"></use></svg><span class="btn-text">Camera Path</span>
       </button>
       <div class="toolbar-divider"></div>
 
       <!-- 3. 渲染设置 / Settings Toggle -->
       <button id="btn-settings" class="btn btn-secondary" title="Open rendering & filtering settings">
-        <span class="btn-icon-symbol"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-settings"></use></svg></span><span class="btn-text">Settings</span>
+        <svg class="ui-icon btn-icon" aria-hidden="true"><use href="#icon-settings"></use></svg><span class="btn-text">Settings</span>
       </button>
       <div class="toolbar-divider"></div>
 
+      <!-- Mobile Rotation Toggle -->
+      <button id="btn-mobile-toggle-rotation" class="btn btn-secondary mobile-rotation-btn" title="Pause model rotation">
+        <span class="btn-text">Stop Rotation</span>
+      </button>
+      <div class="toolbar-divider mobile-rotation-divider"></div>
+
       <!-- 4. 手势控制 / Gesture Toggle -->
       <button id="btn-gesture" class="btn btn-secondary" title="Toggle hand gesture control">
-        <span class="btn-icon-symbol"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-hand-stop"></use></svg></span><span class="btn-text">Gesture</span>
+        <svg class="ui-icon btn-icon" aria-hidden="true"><use href="#icon-hand-stop"></use></svg><span class="btn-text">Gesture</span>
       </button>
       <div class="toolbar-divider"></div>
 
       <!-- 5. 使用指南 / Guide Link -->
       <a id="btn-guide" href="guide.html" target="_blank" class="btn btn-secondary" title="Open user guide" style="text-decoration: none;">
-        <span class="btn-icon-symbol"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-book-2"></use></svg></span><span class="btn-text">Guide</span>
+        <svg class="ui-icon btn-icon" aria-hidden="true"><use href="#icon-book"></use></svg><span class="btn-text">Guide</span>
       </a>
     </div>
     <!-- Language Switcher (Top Right Corner) -->
-    <button id="btn-lang" class="lang-toggle-btn" title="Switch Language / 切换语言" hidden>
-      <span class="lang-zh active-lang">中</span><span class="lang-sep">/</span><span class="lang-en">EN</span>
+    <button id="btn-lang" class="lang-toggle-btn" hidden title="Switch Language / 切换语言">
+      <span class="lang-zh">中</span><span class="lang-sep">/</span><span class="lang-en active-lang">EN</span>
     </button>
+    <a
+      class="github-link"
+      href="https://github.com/willjim/KIRI-Maker"
+      target="_blank"
+      rel="noopener noreferrer"
+      title="GitHub · willjim/KIRI-Maker"
+      aria-label="Open KIRI Maker on GitHub"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.11.79-.25.79-.56v-2.22c-3.22.7-3.9-1.37-3.9-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.71.08-.71 1.17.08 1.78 1.2 1.78 1.2 1.04 1.78 2.72 1.27 3.38.97.1-.75.41-1.27.74-1.56-2.57-.29-5.27-1.29-5.27-5.69 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.47.11-3.05 0 0 .97-.31 3.16 1.18a10.9 10.9 0 0 1 5.75 0c2.19-1.49 3.16-1.18 3.16-1.18.63 1.58.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.71 5.39-5.29 5.68.42.36.79 1.06.79 2.14v3.18c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .7Z"/>
+      </svg>
+    </a>
     <button id="btn-home" class="home-btn" type="button">Home</button>
     <!-- ========== Camera Path Panel ========== -->
     <div class="camera-path-panel hidden" id="camera-path-panel">
       <div class="camera-panel-header">
         <h3>Camera Path Export</h3>
-        <span class="camera-start-hint">滑动可调整运镜的初始位置</span>
+        <span class="camera-start-hint">Swipe to adjust the initial camera position</span>
         <button id="btn-header-preview" class="camera-header-preview" type="button" disabled>Preview</button>
       </div>
       <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: 10px;">
@@ -146,12 +224,27 @@
           <option value="heart">14. 3D Cardiomorphic Loop</option>
           <option value="turbulence">15. Turbulence Noise Flight</option>
           <option value="inceptionPush">16. Inception Push & Roll</option>
+          <option value="spaceDepthPush">17. Spatial Depth Entry</option>
+          <option value="spaceLateralSweep">18. Spatial Lateral Sweep</option>
+          <option value="spaceOutwardOrbit">19. Outward Spatial Orbit</option>
         </select>
       </div>
 
       <div id="desktop-camera-scatter-item" class="setting-item camera-option-item desktop-camera-scatter-item">
         <label for="camera-scatter-effect">Scatter Effect</label>
-        <select id="camera-scatter-effect" style="width: 100%; padding: 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.08); color: var(--text-primary); border: 1px solid var(--border); font-size: 12px; outline: none; cursor: pointer; margin-top: 5px;"></select>
+        <select id="camera-scatter-effect" style="width: 100%; padding: 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.08); color: var(--text-primary); border: 1px solid var(--border); font-size: 12px; outline: none; cursor: pointer; margin-top: 5px;">
+          <option value="none" selected>No particle effects</option>
+          <option value="0">1. Original Explosion (原始无序粒子炸裂)</option>
+          <option value="1">2. Diagonal Sweep (角落对角线波前扫拂)</option>
+          <option value="3">3. Thanos Snap Dissolve (随机区块渐隐消散)</option>
+          <option value="8">4. Waterfall Downward Flow (由上而下瀑布流消散)</option>
+          <option value="11">5. Double Helix Upward (双螺旋结构向上攀升)</option>
+          <option value="16">6. Hologram 3D Printer (粒子逐层打印重组)</option>
+          <option value="13">7. Fractal Julia Orbit (分形几何轨道重组)</option>
+          <option value="14">8. Wind Snap Sweep (风吹飞砂由后向前扫拂)</option>
+          <option value="17">9. Rainfall Assembly (雨点下落重组)</option>
+          <option value="20">10. Interstellar Warp Meteor Assembly (星际穿越流星汇聚)</option>
+        </select>
       </div>
       
       <div class="keyframe-list" id="keyframe-list">
@@ -161,7 +254,7 @@
       <div class="camera-actions">
         <div id="custom-keyframe-actions" class="camera-action-row">
           <button id="btn-add-keyframe" class="btn btn-secondary" title="Add current camera view as keyframe">
-            <span class="keyframe-action-label">Add Keyframe</span><span class="keyframe-count-wrap">(<span id="keyframe-count">0</span>)</span>
+            <span class="keyframe-action-label">Add Keyframe</span><span class="keyframe-count-wrap">(<span id="keyframe-count">0</span><span id="keyframe-limit"></span>)</span>
           </button>
           <button id="btn-clear-keyframes" class="btn btn-secondary" title="Clear all keyframes">
             Clear
@@ -191,11 +284,26 @@
     <div class="settings-panel hidden" id="settings-panel">
       <h3>Rendering Settings</h3>
 
-      <div class="mobile-setting-tabs" role="tablist" aria-label="Rendering parameters">
-        <button type="button" class="mobile-setting-tag active" data-setting-target="setting-crop-item">Crop</button>
-        <button type="button" class="mobile-setting-tag" data-setting-target="setting-size-item">Size</button>
-        <button type="button" class="mobile-setting-tag" data-setting-target="setting-brightness-item">Light</button>
-        <button type="button" class="mobile-setting-tag" data-setting-target="setting-density-item">Density</button>
+      <div class="desktop-setting-tabs" role="tablist" aria-label="Rendering setting groups">
+        <button id="btn-desktop-particle-settings" class="desktop-setting-tab active" type="button" role="tab" aria-selected="true" data-desktop-setting="particles">Particle Settings</button>
+        <button id="btn-desktop-splat-settings" class="desktop-setting-tab" type="button" role="tab" aria-selected="false" data-desktop-setting="spark">3DGS Settings</button>
+      </div>
+
+      <div class="mobile-setting-tabs" role="tablist" aria-label="Rendering setting groups">
+        <button id="btn-mobile-particle-settings" type="button" class="mobile-setting-mode" role="tab" aria-selected="true" data-mobile-setting="particles">Particle Settings</button>
+        <button id="btn-mobile-splat-settings" type="button" class="mobile-setting-mode" role="tab" aria-selected="false" data-mobile-setting="spark">3DGS Settings</button>
+      </div>
+
+      <div class="mobile-particle-setting-tabs" role="tablist" aria-label="Particle parameters">
+        <button type="button" class="mobile-setting-tag mobile-particle-setting-tag active" data-setting-target="setting-crop-item">Crop</button>
+        <button type="button" class="mobile-setting-tag mobile-particle-setting-tag" data-setting-target="setting-size-item">Size</button>
+        <button type="button" class="mobile-setting-tag mobile-particle-setting-tag" data-setting-target="setting-brightness-item">Light</button>
+        <button type="button" class="mobile-setting-tag mobile-particle-setting-tag" data-setting-target="setting-density-item">Density</button>
+      </div>
+
+      <div class="mobile-splat-setting-tabs" role="tablist" aria-label="3DGS tools">
+        <button id="btn-mobile-splat-crop-panel" type="button" class="mobile-splat-setting-tag active" role="tab" aria-selected="true" data-mobile-splat-tool="crop">Crop Background</button>
+        <button id="btn-mobile-splat-eraser-panel" type="button" class="mobile-splat-setting-tag" role="tab" aria-selected="false" data-mobile-splat-tool="eraser">Eraser</button>
       </div>
       
       <div class="setting-item" style="display: none;">
@@ -208,26 +316,95 @@
         </select>
       </div>
       <div id="setting-crop-item" class="setting-item mobile-parameter mobile-active">
-        <div class="setting-row-val">
-          <label for="setting-crop-factor">Filter Background (Crop)</label>
-          <span class="setting-val-display" id="setting-crop-factor-val">2.50x</span>
+        <div id="splat-crop-controls" class="crop-control-block splat-crop-control">
+          <div class="setting-row-val">
+            <span class="splat-crop-title">3DGS Background Crop</span>
+            <div class="crop-setting-actions">
+              <span class="mobile-splat-crop-shape-title">Crop Shape</span>
+              <button
+                id="btn-splat-crop-toggle"
+                class="crop-toggle"
+                type="button"
+                aria-pressed="false"
+                aria-label="Enable 3DGS crop"
+              ><span class="crop-toggle-knob"></span></button>
+            </div>
+          </div>
+          <div class="splat-crop-shape-row">
+            <span class="splat-crop-shape-label">Crop Shape</span>
+            <span class="splat-crop-inline-hint splat-crop-direct-hint-text">Drag the X / Y / Z arrows on the crop volume to adjust each face</span>
+            <div class="splat-crop-shape-options" role="group" aria-label="3DGS crop shape">
+              <button
+                id="btn-mobile-splat-crop-none"
+                class="splat-crop-shape-option mobile-splat-crop-none"
+                type="button"
+                aria-pressed="false"
+              >None</button>
+              <button
+                id="btn-splat-crop-shape-ellipsoid"
+                class="splat-crop-shape-option"
+                type="button"
+                data-crop-shape="ellipsoid"
+                aria-pressed="false"
+              >Ellipsoid</button>
+              <button
+                id="btn-splat-crop-shape-box"
+                class="splat-crop-shape-option"
+                type="button"
+                data-crop-shape="box"
+                aria-pressed="false"
+              >Box</button>
+            </div>
+          </div>
+          <div id="splat-eraser-tool" class="splat-eraser-tool" aria-label="Gaussian splat eraser">
+            <div class="splat-eraser-tool-header">
+              <span class="splat-eraser-tool-title"><svg class="ui-icon" aria-hidden="true"><use href="#icon-eraser"></use></svg><span class="splat-eraser-tool-title-text">Gaussian Splat Eraser</span></span>
+              <span id="splat-eraser-status" class="splat-eraser-status">Drag to highlight an area</span>
+            </div>
+            <div class="splat-eraser-size-row">
+              <label for="setting-splat-eraser-size">Eraser Size</label>
+              <input id="setting-splat-eraser-size" type="range" min="0.1" max="20" step="0.1" value="8">
+              <span id="setting-splat-eraser-size-val" class="setting-val-display">8%</span>
+            </div>
+            <div class="splat-eraser-actions">
+              <button id="btn-splat-eraser-paint" class="splat-eraser-action active" type="button" aria-pressed="true">Paint Selection</button>
+              <button id="btn-splat-eraser-confirm" class="splat-eraser-action primary" type="button" disabled>Confirm Erase</button>
+              <button id="btn-splat-eraser-undo" class="splat-eraser-action" type="button" disabled>Undo</button>
+            </div>
+          </div>
         </div>
-        <input type="range" id="setting-crop-factor" min="0.50" max="3.00" step="0.05" value="2.50" list="crop-ticks">
-        <datalist id="crop-ticks">
-          <option value="0.5"></option>
-          <option value="1.0"></option>
-          <option value="1.5"></option>
-          <option value="2.0"></option>
-          <option value="2.5"></option>
-          <option value="3.0"></option>
-        </datalist>
-        <div class="slider-ticks">
-          <span>0.5x (Max)</span>
-          <span>1.0x</span>
-          <span>1.5x</span>
-          <span>2.0x</span>
-          <span>2.5x</span>
-          <span>3.0x (Off)</span>
+
+        <div id="particle-crop-controls" class="crop-control-block particle-crop-control">
+          <div class="setting-row-val">
+            <label for="setting-crop-factor">Particle Background Crop</label>
+            <div class="crop-setting-actions">
+              <span class="setting-val-display" id="setting-crop-factor-val">2.50x</span>
+              <button
+                id="btn-particle-crop-toggle"
+                class="crop-toggle active"
+                type="button"
+                aria-pressed="true"
+                aria-label="Disable particle crop"
+              ><span class="crop-toggle-knob"></span></button>
+            </div>
+          </div>
+          <input type="range" id="setting-crop-factor" min="0.50" max="3.00" step="0.05" value="2.50" list="crop-ticks">
+          <datalist id="crop-ticks">
+            <option value="0.5"></option>
+            <option value="1.0"></option>
+            <option value="1.5"></option>
+            <option value="2.0"></option>
+            <option value="2.5"></option>
+            <option value="3.0"></option>
+          </datalist>
+          <div class="slider-ticks">
+            <span>0.5x</span>
+            <span>1.0x</span>
+            <span>1.5x</span>
+            <span>2.0x</span>
+            <span>2.5x</span>
+            <span>3.0x</span>
+          </div>
         </div>
       </div>
       <div class="setting-item" style="display: none;">
@@ -247,9 +424,9 @@
       <div id="setting-brightness-item" class="setting-item mobile-parameter">
         <div class="setting-row-val">
           <label for="setting-particle-brightness">Particle Brightness</label>
-          <span class="setting-val-display" id="setting-particle-brightness-val">0.70</span>
+          <span class="setting-val-display" id="setting-particle-brightness-val">0.77</span>
         </div>
-        <input type="range" id="setting-particle-brightness" min="0.10" max="2.00" step="0.05" value="0.70">
+        <input type="range" id="setting-particle-brightness" min="0.10" max="2.00" step="0.01" value="0.77">
       </div>
       <div id="setting-density-item" class="setting-item mobile-parameter">
         <div class="setting-row-val">
@@ -279,21 +456,14 @@
         </div>
         <input type="range" id="setting-splat-scale" min="0.2" max="4.0" step="0.1" value="1.0">
       </div>
-      <div id="desktop-scatter-anchor"></div>
-      <div id="scatter-effect-item" class="setting-item camera-option-item">
-        <label for="setting-scatter-effect">Scatter Effect (粒子分散效果)</label>
-        <select id="setting-scatter-effect" style="width: 100%; padding: 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.08); color: var(--text-primary); border: 1px solid var(--border); font-size: 12px; outline: none; cursor: pointer; margin-top: 5px;">
-          <option value="none" selected>No particle effects</option>
-          <option value="0">1. Original Explosion (原始无序粒子炸裂)</option>
-          <option value="1">2. Diagonal Sweep (角落对角线波前扫拂)</option>
-          <option value="3">3. Thanos Snap Dissolve (随机区块渐隐消散)</option>
-          <option value="8">4. Waterfall Downward Flow (由上而下瀑布流消散)</option>
-          <option value="11">5. Double Helix Upward (双螺旋结构向上攀升)</option>
-          <option value="16">6. Hologram 3D Printer (粒子逐层打印重组)</option>
-          <option value="13">7. Fractal Julia Orbit (分形几何轨道重组)</option>
-          <option value="14">8. Wind Snap Sweep (风吹飞砂由后向前扫拂)</option>
-          <option value="17">9. Rainfall Assembly (雨点下落重组)</option>
-        </select>
+      <div class="mobile-settings-actions" aria-label="Mobile setting actions">
+        <button id="btn-mobile-settings-reset" class="mobile-settings-action" type="button" aria-label="Reset current parameter" title="Reset current parameter">
+          <svg class="ui-icon" aria-hidden="true"><use href="#icon-restore"></use></svg>
+        </button>
+        <span id="mobile-settings-group-label" class="mobile-settings-group-label">Particle Settings</span>
+        <button id="btn-mobile-settings-confirm" class="mobile-settings-action primary" type="button" aria-label="Save settings" title="Save settings">
+          <svg class="ui-icon" aria-hidden="true"><use href="#icon-check"></use></svg>
+        </button>
       </div>
     </div>
     <!-- ========== Stats Panel ========== -->
@@ -307,10 +477,10 @@
         <span class="stat-value" id="stat-fps">0</span>
       </div>
       <!-- Flip Vertically Button -->
-      <button id="btn-flip-x" class="btn btn-secondary stats-action-button" title="Toggle model orientation (flip upside down)">
+      <button id="btn-flip-x" class="btn btn-secondary" style="margin-top: 6px; font-size: 10px; padding: 4px 8px; justify-content: center; width: 100%;" title="Toggle model orientation (flip upside down)">
         <span class="btn-text">Flip Vertically</span>
       </button>
-      <button id="btn-toggle-rotation" class="btn btn-secondary stats-action-button" title="Stop model rotation">
+      <button id="btn-toggle-rotation" class="btn btn-secondary rotation-toggle-btn" type="button" title="Pause model rotation">
         <span class="btn-text">Stop Rotation</span>
       </button>
     </div>
@@ -333,23 +503,22 @@
         >
         <!-- Auto-play Scatter Button -->
         <button id="btn-play-scatter" class="btn btn-secondary" style="padding: 4px 8px; font-size: 10px; display: flex; align-items: center; justify-content: center; height: 24px; min-width: 32px; margin: 0;" title="Auto-play scatter effect (0-100-0)">
-          <span class="btn-icon-symbol scatter-play-icon"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-player-play"></use></svg></span>
+          <span class="scatter-play-label" style="margin: 0; font-size: 10px; font-family: inherit; font-weight: 600;">Play</span>
         </button>
       </div>
     </div>
-    <button id="btn-mobile-toggle-rotation" class="mobile-rotation-button" type="button" title="Stop model rotation" aria-label="Stop model rotation" aria-pressed="false">
-      <svg class="tabler-icon mobile-rotation-orbit" aria-hidden="true"><use href="#ti-view-360-arrow"></use></svg>
-      <svg class="tabler-icon mobile-rotation-ban" aria-hidden="true"><use href="#ti-slash"></use></svg>
-    </button>
     <!-- ========== KIRI Engine Intro Panel ========== -->
     <div class="kiri-intro-panel" id="kiri-intro-panel">
       <div class="kiri-intro-header">
-        <span class="kiri-intro-title" id="kiri-intro-title"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-sparkles"></use></svg><span class="kiri-intro-title-text">About Kiri Engine</span></span>
-        <a href="https://www.kiriengine.app/" target="_blank" rel="noopener" class="kiri-visit-link" id="kiri-visit-link"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-arrow-right"></use></svg><span class="kiri-visit-link-text">Visit Kiri Engine</span></a>
-        <button id="btn-minimize-kiri" class="kiri-minimize-btn" title="Minimize" aria-label="Minimize"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-x"></use></svg></button>
+        <span class="kiri-intro-title" id="kiri-intro-title">
+          <svg class="ui-icon" aria-hidden="true"><use href="#icon-sparkles"></use></svg>
+          <span class="kiri-intro-title-text">About Kiri Engine</span>
+        </span>
+        <a href="https://www.kiriengine.app/" target="_blank" rel="noopener" class="kiri-visit-link" id="kiri-visit-link">→ Visit Kiri Engine</a>
+        <button id="btn-minimize-kiri" class="kiri-minimize-btn" title="Minimize">×</button>
       </div>
       <div class="kiri-intro-content" id="kiri-intro-content">
-        Kiri Engine turns real-world scenes into shareable 3D content. This tool imports 3DGS share links from Kiri Engine, Polycam, and Luma for custom camera paths, glowing particle effects, and gesture control.
+        Kiri Engine turns real-world scenes into shareable 3D content. KIRI Maker imports Kiri Engine, Polycam, Luma, and Insta360 share links for particle effects, editable 3DGS crop and eraser tools, gesture control, and custom camera paths.
       </div>
     </div>
 
@@ -363,41 +532,78 @@
         </div>
       </div>
       <div class="gesture-guide" id="gesture-guide">
-        <div class="gesture-guide-item" id="guide-palm"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-hand-stop"></use></svg><span class="gesture-guide-text">张开手掌：粒子消散</span></div>
-        <div class="gesture-guide-item" id="guide-fist"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-hand-grab"></use></svg><span class="gesture-guide-text">握拳：粒子聚集</span></div>
-        <div class="gesture-guide-item" id="guide-victory"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-hand-two-fingers"></use></svg><span class="gesture-guide-text">剪刀手：切换模式</span></div>
-        <div class="gesture-guide-item" id="guide-zoom"><span class="gesture-pair" aria-hidden="true"><svg class="tabler-icon"><use href="#ti-hand-grab"></use></svg><svg class="tabler-icon"><use href="#ti-hand-grab"></use></svg></span><span class="gesture-guide-text">双拳缩放：缩放模型</span></div>
-        <div class="gesture-guide-item" id="guide-pointing"><svg class="tabler-icon" aria-hidden="true"><use href="#ti-hand-finger"></use></svg><span class="gesture-guide-text">食指：控制模型视角</span></div>
+        <div class="gesture-guide-item" id="guide-palm"><svg class="ui-icon" aria-hidden="true"><use href="#icon-hand-stop"></use></svg><span class="gesture-guide-label">Open Palm: Dissipate</span></div>
+        <div class="gesture-guide-item" id="guide-fist"><svg class="ui-icon" aria-hidden="true"><use href="#icon-hand-grab"></use></svg><span class="gesture-guide-label">Closed Fist: Assemble</span></div>
+        <div class="gesture-guide-item" id="guide-victory"><svg class="ui-icon" aria-hidden="true"><use href="#icon-hand-two-fingers"></use></svg><span class="gesture-guide-label">Victory: Toggle Mode</span></div>
+        <div class="gesture-guide-item" id="guide-zoom"><span class="gesture-icon-pair" aria-hidden="true"><svg class="ui-icon"><use href="#icon-hand-grab"></use></svg><svg class="ui-icon"><use href="#icon-hand-grab"></use></svg></span><span class="gesture-guide-label">Two Fists: Scale Model</span></div>
+        <div class="gesture-guide-item" id="guide-pointing"><svg class="ui-icon" aria-hidden="true"><use href="#icon-hand-finger"></use></svg><span class="gesture-guide-label">Index Finger: Rotate View</span></div>
       </div>
     </div>
     <!-- ========== Welcome Hint (Landing Centered Box) ========== -->
     <div class="welcome-hint" id="welcome-hint">
       <div class="landing-card">
-        <div class="landing-logo">
-          <svg class="tabler-icon" aria-hidden="true"><use href="#ti-sparkles"></use></svg>
-          <span class="landing-maker-label">KIRI Maker</span>
-        </div>
-        <h2><span class="landing-title-text">KIRI Custom Effects & Camera Tool</span></h2>
-        <p>Paste a Kiri Engine, Polycam, or Luma share URL below to explore Particle Mode and 3D Reality.</p>
+        <div class="landing-logo"><svg class="ui-icon" aria-hidden="true"><use href="#icon-sparkles"></use></svg><span>KIRI Maker</span></div>
+        <h2>KIRI Custom Effects & Camera Tool</h2>
+        <p>Paste a Kiri Engine, Polycam, Luma, or Insta360 share URL below to explore Particle Mode, editable 3D Reality, gesture control, and custom camera paths.</p>
         
         <!-- Center Input Box -->
         <div class="landing-input-box">
           <input
             type="text"
             id="landing-url-input"
-            placeholder="Paste a Kiri Engine, Polycam, or Luma share URL..."
+            placeholder="Paste a Kiri Engine, Polycam, Luma, or Insta360 share URL here..."
             autocomplete="off"
             spellcheck="false"
           >
           <button id="landing-btn-random" class="landing-random-btn" type="button" title="Load a random sample model" aria-label="Load a random sample model">
-            <svg class="tabler-icon" aria-hidden="true"><use href="#ti-dice-5"></use></svg>
+            <svg class="ui-icon" aria-hidden="true"><use href="#icon-dice-5"></use></svg>
           </button>
           <button id="landing-btn-load" class="btn btn-primary" title="Load model">
-            <svg class="tabler-icon" aria-hidden="true"><use href="#ti-arrow-right"></use></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
             <span class="btn-text">Load</span>
           </button>
         </div>
       </div>
+    </div>
+    <!-- ========== WeChat Browser Download Notice (Landing Only) ========== -->
+    <div
+      class="wechat-open-overlay"
+      id="wechat-open-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="wechat-open-title"
+    >
+      <div class="wechat-open-guide">
+        <svg class="wechat-open-arrow" viewBox="0 0 150 124" aria-hidden="true">
+          <defs>
+            <marker
+              id="wechat-arrowhead"
+              markerWidth="12"
+              markerHeight="12"
+              refX="0"
+              refY="6"
+              orient="auto"
+              markerUnits="userSpaceOnUse"
+            >
+              <path d="M0,0 L12,6 L0,12 Z"></path>
+            </marker>
+          </defs>
+          <path
+            class="wechat-open-arrow-path"
+            d="M18 110 C3 72 34 48 63 64 C89 79 70 106 45 94 C18 82 33 39 69 25 C91 16 115 18 137 7"
+            marker-end="url(#wechat-arrowhead)"
+          ></path>
+        </svg>
+        <div class="wechat-open-copy">
+          <strong id="wechat-open-title">Open this page in your browser</strong>
+          <span>Video downloads are unavailable</span>
+          <span>inside the WeChat browser.</span>
+        </div>
+      </div>
+      <button class="wechat-open-dismiss" id="wechat-open-dismiss" type="button">Got it</button>
     </div>
     <!-- ========== Loading Overlay ========== -->
     <div class="loading-overlay" id="loading-overlay">
@@ -411,13 +617,18 @@
         <div class="bar" id="loading-bar"></div>
       </div>
       <button id="btn-cancel-composition" class="btn btn-secondary composition-cancel-button" type="button">
-        停止合成
+        Stop Compositing
       </button>
     </div>
     <!-- ========== Toast Container ========== -->
     <div class="toast-container" id="toast-container"></div>
   </div>
+  <script>
+    document.getElementById('wechat-open-dismiss')?.addEventListener('click', function () {
+      document.getElementById('wechat-open-overlay')?.classList.add('dismissed');
+    });
+  </script>
   <!-- App Entry Point -->
-  <script type="module" src="js/app.js?v=3.66"></script>
+  <script type="module" src="js/app.js?v=4.7"></script>
 </body>
 </html>
